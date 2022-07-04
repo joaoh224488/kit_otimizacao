@@ -1,3 +1,5 @@
+
+
 #include <iostream>
 #include <vector>
 #include "ILS.h"
@@ -22,27 +24,28 @@ int main(){
 
     dist->show_data();
 
-    vector <int> path = {1, 6, 3, 2, 5, 4};
+    vector <int> path = {1, 5, 4, 6, 3, 2, 1};
 
-    ILS *Solucao =  new ILS(dist, path);
+    for (int i = 0; i < path.size(); i ++){
+        path[i] = path[i] - 1;
+    }
 
+    //ILS *Solucao =  new ILS(dist, path);
+
+    //Solucao->exibirSolucao();
+
+
+  //  cout << Solucao->calcularValorObj() << endl;
+
+    ILS *Solucao =  new ILS(dist);
+
+    Solucao->Construcao();
+    
 
     Solucao->exibirSolucao();
 
-    
 
-    
+    cout << Solucao->calcularValorObj() << endl;
 
-
-/*
-    vector <int> path = {1, 6, 3, 2, 5, 4, 1};
-
-
-    ILS *sol = new ILS(path);
-
-    sol->exibirSolucao();
-
-    cout<< sol->get_valor_obj()<< endl;
-
-    */
+    return 0;
 }
