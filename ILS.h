@@ -4,37 +4,49 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 #include <time.h>
 #include "Data.h"
 
 class ILS
 {
-    v_inteiros sequencia;
-    double valorObj;
-    Data *distancias;
-    
-public:
+    private:
+        v_inteiros sequencia;
+        double valorObj;
+        Data *distancias;
+        
+    public:
 
-    ILS(Data *distancias);
-    ILS(Data *distancias, v_inteiros exemplo); // EXCLUIR HOJE
+        ILS(Data *distancias);
 
-    void exibirSolucao();
-    double calcularValorObj();
+        // Para a copia que o bestImprovement faz
+        ILS(Data *distancias, v_inteiros exemplo); 
 
-    void Construcao();
+        void exibirSolucao();
+        double calcularValorObj();
 
-    // PARA A BUSCA LOCAL
-    void swap(int i, int j);
-    double calculateSwapCost(int i, int j);
+        void Construcao();
 
-    //std::vector<InsertionInfo> calcularCustoInsercao(v_inteiros CL);
+        // PARA A BUSCA LOCAL
+        void swap(int i, int j);
+        double calculateSwapCost(int i, int j);
+        bool bestImprovementSwap();
+
+        void BuscaLocal();
+
+        // Perturbacao
+
+        void perturbacao();
 
 
+        //std::vector<InsertionInfo> calcularCustoInsercao(v_inteiros CL);
 };
+
+// facilita para avaliar o custo das soluções
 
 ILS::ILS(Data *distancias, v_inteiros exemplo)
 {
-    this->distancias = distancias;                  // EXCLUIR HOJE
+    this->distancias = distancias;                 
 
     this->sequencia = exemplo;
 }
@@ -44,13 +56,11 @@ ILS :: ILS (Data *distancias){
 }
 
 void ILS:: exibirSolucao(){
-    for (int i = 0 ; i < this->sequencia.size() -1 ; i++){ 
+    for (int i = 0 ; i < this->sequencia.size() - 1 ; i++){ 
         std::cout << this->sequencia[i] + 1 << " -> ";
     }
 
     std::cout << this-> sequencia.back() + 1 << std::endl;
-            
-
 }
 
 
@@ -59,16 +69,18 @@ double ILS:: calcularValorObj()
             this->valorObj = 0.0;
             
             for(int i = 0; i < this->sequencia.size() - 1; i++){
+
            
              
                 this->valorObj += (double) distancias->adjMatriz[this->sequencia[i]][this->sequencia[i+1]];
-                ;
+                
             }
             this->valorObj += (double) distancias->adjMatriz[this->sequencia.back()][this->sequencia[0]];
 
             return this->valorObj;
   
-    }
+}
+
 
 void ILS :: Construcao(){
     srand(time(NULL));              // Garante a aleatoriedade do random
@@ -96,6 +108,9 @@ void ILS :: Construcao(){
   
     // DESORDENANDO A LISTA DE CANDIDATOS
     std::random_shuffle(CL.begin(), CL.end());
+
+
+    // 3, 0, 1, 5, 4, 2, 6
     
     int chs;                            // Chosen
 
@@ -130,7 +145,7 @@ void ILS :: Construcao(){
 
 
 
-    for (int k = 0; k < maximo; k++){
+    while (!CL.empty()){
 
         arestas.clear();
         custo_aresta.clear();
@@ -222,9 +237,122 @@ double ILS :: calculateSwapCost(int primeiro_indice, int segundo_indice){
 
     return delta;
 
+}
+
+bool ILS:: bestImprovementSwap(){
+    int bestDelta = 0;
+    int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
+
+    for (int i = 1; i < sequencia.size() - 1; i++){
+        for (int j = i + 1; j < sequencia.size() - 1; j++){
+            double delta = calculateSwapCost(i, j);
+
+            if (delta < bestDelta){
+                best_i = i;
+                best_j = j;
+            }
+        }
+    }
+
+    if (bestDelta < 0){
+        swap(best_i, best_j);
+        return true;
+    }
+
+    return false;
+}
+
+
+void ILS:: BuscaLocal(){
+
+     srand(time(NULL));
+
+    std:: vector <int> NL = {1};
+
+    bool improved = false;
+
+
+    while (!NL.empty())
+    {
+        int n = rand() % NL.size();
+
+        switch (NL[n])
+        {
+
+        case 1:
+            improved = bestImprovementSwap();
+            break;
+        
+        }
+
+        if (improved)
+        
+            NL = {1};
+        
+
+        else
+            NL.erase(NL.begin() + n);
+    
+    }
 
 }
 
+void ILS :: perturbacao(){
+
+    srand(time(NULL));
+
+    int n_elem = std::ceil(sequencia.size() / 10.0);     // numero maximo de elementos
+
+    int n1_elem, n2_elem; // numero de elementos dos vetores a gerar
+
+    // Escolha de tamanho dos elementos
+    int n1_aleatorio, n2_aleatorio;
+
+    n1_aleatorio = rand() % n_elem;
+
+    n2_aleatorio = rand() % n_elem;         // NÃO SE PREOCUPE. N_ELEM NUNCA VAI SER 0
+
+
+    n1_elem = n1_aleatorio > 2 ? n1_aleatorio : 2;
+
+    n2_elem = n2_aleatorio > 2 ? n2_aleatorio : 2;
+
+    // Escolha dos elementos a serem trocados
+
+    // AQUI VOCÊ DEVE DESCOBRIR COMO FAZ PRA INSERIR UM VETOR NO OUTRO
+
+
+}
+
+
+
+/* 2 opt
+
+
+SOLUÇÃO INICIAL:
+
+7 - 6 - 4 - 10 - 3 - 9 - 2 - 8 - 5 - 1   
+
+SOLUÇÃO ALTERADA PELA 2-OPT:
+
+7 - 6 - 4 - 10 - 3 - 9 - 1 - 5 - 8 - 2  
+
+
+SOLUÇÃO INICIAL:
+
+5 - 1 - 7 - 6 - 4 - 10 - 3 - 9 - 2 - 8
+
+DEPOIS DO OR - OPT - 2:
+
+5 - 1 - 7 - 6 - 3 - 9 - 2 - 8 - 10 - 4
+
+DEPOIS DO OR - OPT - 3:
+
+5 - 1 - 7 - 6 - 9 - 2 - 8 - 3 - 10 - 4
+
+
+s' = m(s)
+*/
 
 
 

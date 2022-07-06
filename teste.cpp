@@ -9,6 +9,7 @@ using namespace std;
 
 int main(){
 
+
     matriz adjMatriz =    {
             {0, 2, 1, 4, 9, 1},
             {2, 0, 5, 9, 7, 2},
@@ -46,6 +47,20 @@ int main(){
 
 
     cout << Solucao->calcularValorObj() << endl;
+
+    double custo = Solucao->calculateSwapCost(1, 2);
+
+    Solucao->swap(1, 2);
+
+    Solucao->exibirSolucao();
+
+    cout << Solucao->calcularValorObj() << endl;
+
+    cout << custo << endl;
+
+    Solucao->bestImprovementSwap();
+
+    
 
     return 0;
 }
