@@ -8,8 +8,6 @@
 using namespace std;
 
 int main(){
-
-
     matriz adjMatriz =    {
             {0, 2, 1, 4, 9, 1},
             {2, 0, 5, 9, 7, 2},
@@ -23,37 +21,9 @@ int main(){
 
     Data *dist = new Data(vertices, adjMatriz);
 
-    dist->show_data();
-
-    vector <int> path = {1, 5, 4, 6, 3, 2, 1};
-
-    for (int i = 0; i < path.size(); i ++){
-        path[i] = path[i] - 1;
-    }
-
-    //ILS *Solucao =  new ILS(dist, path);
-
-    //Solucao->exibirSolucao();
-
-
-  //  cout << Solucao->calcularValorObj() << endl;
-
-    ILS *Solucao =  new ILS(dist);
-
-    Solucao->Construcao();
-    
+    ILS *Solucao =  new ILS(dist, 50 , 100);
 
     Solucao->exibirSolucao();
-
-
-    cout << Solucao->calcularValorObj() << endl;
-
-    Solucao->BuscaLocal();
-
-    Solucao->exibirSolucao();
-    
-    cout << Solucao->calcularValorObj() << endl;
-
 
     return 0;
 }

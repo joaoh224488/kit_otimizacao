@@ -13,22 +13,22 @@ class ILS
     private:
         v_inteiros sequencia;
         double valorObj;
+
         Data *distancias;
+        int maxIter;
+        int maxIterILS;
+        
         
     public:
-
-        ILS(Data *distancias);
-
-        // Para a copia que o bestImprovement faz
-        ILS(Data *distancias, v_inteiros exemplo); 
+        ILS(Data *distancias, int maxIter, int maxIterILS);
 
         void exibirSolucao();
-        double calcularValorObj();
+        double calcularValorObj(v_inteiros sequencia);
 
         void Construcao();
 
         // PARA A BUSCA LOCAL
-        void swap(int i, int j);
+        v_inteiros swap(int i, int j, v_inteiros sequencia);
         double calculateSwapCost(int i, int j);
         bool bestImprovementSwap();
 
@@ -40,44 +40,51 @@ class ILS
 
 
         //std::vector<InsertionInfo> calcularCustoInsercao(v_inteiros CL);
+
+        // procedimento que resolve o ILS:
+
+        void Solution();
 };
 
 // facilita para avaliar o custo das soluções
 
-ILS::ILS(Data *distancias, v_inteiros exemplo)
-{
-    this->distancias = distancias;                 
-
-    this->sequencia = exemplo;
-}
-
-ILS :: ILS (Data *distancias){
+ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
     this->distancias = distancias;
+    this->maxIter = maxIter;
+    this->maxIterILS = maxIterILS;
+
+
+    Solution();
+    
 }
 
 void ILS:: exibirSolucao(){
+
+    std:: cout << "Sequence:    ";
     for (int i = 0 ; i < this->sequencia.size() - 1 ; i++){ 
         std::cout << this->sequencia[i] + 1 << " -> ";
     }
 
     std::cout << this-> sequencia.back() + 1 << std::endl;
+
+    std:: cout << "Cost:  " << calcularValorObj(sequencia) << std::endl; 
 }
 
 
-double ILS:: calcularValorObj()
+double ILS:: calcularValorObj(v_inteiros sequencia)
 {
-            this->valorObj = 0.0;
+            double valorObj = 0.0;
             
-            for(int i = 0; i < this->sequencia.size() - 1; i++){
+            for(int i = 0; i < sequencia.size() - 1; i++){
 
            
              
-                this->valorObj += (double) distancias->adjMatriz[this->sequencia[i]][this->sequencia[i+1]];
+                valorObj += (double) distancias->adjMatriz[sequencia[i]][sequencia[i+1]];
                 
             }
-            this->valorObj += (double) distancias->adjMatriz[this->sequencia.back()][this->sequencia[0]];
+            valorObj += (double) distancias->adjMatriz[sequencia.back()][sequencia[0]];
 
-            return this->valorObj;
+            return valorObj;
   
 }
 
@@ -209,29 +216,31 @@ void ILS :: Construcao(){
 
     } 
 
-void ILS:: swap(int primeiro_indice, int segundo_indice){      // VERIFICAR DEPOIS SE HÁ PROBLEMA NO SWAP
+ v_inteiros ILS:: swap(int primeiro_indice, int segundo_indice, v_inteiros seq){
+    
+    int aux;
 
-    int aux;                                                    // testar no arquivo aux
+    aux = seq[primeiro_indice];
 
-    aux = this->sequencia[primeiro_indice];
+    seq[primeiro_indice] = seq[segundo_indice];
 
-    this->sequencia[primeiro_indice] = this->sequencia[segundo_indice];
+    seq[segundo_indice] = aux;
 
-    this->sequencia[segundo_indice] = aux;
+    return seq;
 
 }
 
 double ILS :: calculateSwapCost(int primeiro_indice, int segundo_indice){
 
-    ILS teste(this->distancias, this->sequencia);
+    v_inteiros teste = this->sequencia;
 
     double antes_swap, depois_swap, delta;
 
-    antes_swap = teste.calcularValorObj();
+    antes_swap = calcularValorObj(teste);
 
-    teste.swap(primeiro_indice, segundo_indice);
+    teste = swap(primeiro_indice, segundo_indice, teste); 
 
-    depois_swap = teste.calcularValorObj();
+    depois_swap = calcularValorObj(teste);
 
     delta = depois_swap - antes_swap;
 
@@ -243,8 +252,8 @@ bool ILS:: bestImprovementSwap(){
     int bestDelta = 0;
     int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
 
-    for (int i = 1; i < sequencia.size() - 1; i++){
-        for (int j = i + 1; j < sequencia.size() - 1; j++){
+    for (int i = 1; i < this->sequencia.size() - 1; i++){
+        for (int j = i + 1; j < this->sequencia.size() - 1; j++){
             double delta = calculateSwapCost(i, j);
 
             if (delta < bestDelta){
@@ -256,7 +265,7 @@ bool ILS:: bestImprovementSwap(){
     }
 
     if (bestDelta < 0){
-        swap(best_i, best_j);
+        this->sequencia = swap(best_i, best_j, this->sequencia);
         return true;
     }
 
@@ -325,43 +334,52 @@ void ILS :: perturbacao(){
 
 }
 
+void ILS:: Solution(){
 
+    v_inteiros bestOfAll;
+    double best_costOfAll = INFINITY;
 
-/* 2 opt
+    for (int i = 0; i < maxIter; i++){
 
+        Construcao();
 
-SOLUÇÃO INICIAL:
+        v_inteiros best = this->sequencia;
 
-7 - 6 - 4 - 10 - 3 - 9 - 2 - 8 - 5 - 1   
+        double best_cost = calcularValorObj(sequencia);
 
-SOLUÇÃO ALTERADA PELA 2-OPT:
+        int iterILS = 0;
 
-7 - 6 - 4 - 10 - 3 - 9 - 1 - 5 - 8 - 2  
+        while (iterILS <= maxIterILS)
+        {
+          
+            BuscaLocal();
 
+            if (calcularValorObj(sequencia) < best_cost)
 
-SOLUÇÃO INICIAL:
+            {
+                best = sequencia;
+                best_cost = calcularValorObj(sequencia);
+                iterILS = 0;
+            }
 
-5 - 1 - 7 - 6 - 4 - 10 - 3 - 9 - 2 - 8
+            //perturbacao();            TERMINAR PERTURBACAO
 
-DEPOIS DO OR - OPT - 2:
+            iterILS++;
 
-5 - 1 - 7 - 6 - 3 - 9 - 2 - 8 - 10 - 4
+        }
+        
+        if (best_cost < best_costOfAll){
 
-DEPOIS DO OR - OPT - 3:
+            bestOfAll = best;
+            best_costOfAll = best_cost;
+        }
+    }
 
-5 - 1 - 7 - 6 - 9 - 2 - 8 - 3 - 10 - 4
+    sequencia = bestOfAll;
 
-
-s' = m(s)
-*/
-
-
-
-
-
-
-
-
+    valorObj = best_costOfAll;
+    
+}
 
 
 
