@@ -48,19 +48,12 @@ int main(){
 
     cout << Solucao->calcularValorObj() << endl;
 
-    double custo = Solucao->calculateSwapCost(1, 2);
-
-    Solucao->swap(1, 2);
+    Solucao->BuscaLocal();
 
     Solucao->exibirSolucao();
-
+    
     cout << Solucao->calcularValorObj() << endl;
 
-    cout << custo << endl;
-
-    Solucao->bestImprovementSwap();
-
-    
 
     return 0;
 }

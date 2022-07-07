@@ -135,12 +135,12 @@ void ILS :: Construcao(){
    // std:: vector <int> aresta_removida;
 
 
-    int i, j, i_menor;
-    int custo_atual, menor_custo;
+    int i_menor;
+    int atual, menor_custo;
     int maximo = CL.size();
     
     std::vector<std::vector<int>> arestas;
-    std::vector<int> custo_aresta;
+    std::vector<int> custos;
     std::vector<int> aux;
 
 
@@ -148,30 +148,30 @@ void ILS :: Construcao(){
     while (!CL.empty()){
 
         arestas.clear();
-        custo_aresta.clear();
+        custos.clear();
         
-        for (i = 0; i < CL.size(); i++){
-            for (j = 0; j < s1.size() - 1; j++){
+        for (int i = 0; i < CL.size(); i++){
+            for (int j = 0; j < s1.size() - 1; j++){
                 
                 aux.clear();
                     
-                custo_atual += distancias->adjMatriz[s1[j]][CL[i]];
-                custo_atual += distancias->adjMatriz[s1[j + 1]][CL[i]];
-                custo_atual -= distancias->adjMatriz[s1[j]][s1[j + 1]];
+                atual += distancias->adjMatriz[s1[j]][CL[i]];
+                atual += distancias->adjMatriz[s1[j + 1]][CL[i]];
+                atual -= distancias->adjMatriz[s1[j]][s1[j + 1]];
 
                 aux.push_back(j);
                 aux.push_back(CL[i]);
                 aux.push_back(j + 1);
 
                 arestas.push_back(aux);
-                custo_aresta.push_back(custo_atual);
+                custos.push_back(atual);
 
-                custo_atual = 0;
+                atual = 0;
             }
 
             int cont = 0;
 
-            for (int custo : custo_aresta){
+            for (int custo : custos){
                 if (cont == 0){
                     menor_custo = custo;
                     i_menor = cont;
@@ -190,16 +190,16 @@ void ILS :: Construcao(){
     
         s1.insert(s1.begin() + arestas[i_menor][0], arestas[i_menor][1]);
 
-        int indice_para_excluir;
+        int a_excluir;
 
-        for (i = 0; i < CL.size(); i++){
+        for (int i = 0; i < CL.size(); i++){
             if (arestas[i_menor][1] == CL[i]){
-                indice_para_excluir = i;
+                a_excluir = i;
                 break;
             }
         }
 
-        CL.erase(CL.begin() + indice_para_excluir);
+        CL.erase(CL.begin() + a_excluir);
 
     }
 
@@ -250,6 +250,7 @@ bool ILS:: bestImprovementSwap(){
             if (delta < bestDelta){
                 best_i = i;
                 best_j = j;
+                bestDelta = delta;
             }
         }
     }
