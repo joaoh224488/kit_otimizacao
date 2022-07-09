@@ -28,9 +28,18 @@ class ILS
         void Construcao();
 
         // PARA A BUSCA LOCAL
-        v_inteiros swap(int i, int j, v_inteiros sequencia);
-        double calculateSwapCost(int i, int j);
+        v_inteiros swap(v_inteiros sequencia, int primeiro_indice, int segundo_indice);
+        double calculateSwapCost(int primeiro_indice, int segundo_indice);
         bool bestImprovementSwap();
+
+        v_inteiros twoOpt(v_inteiros sequencia, int primeiro_indice, int segundo_indice);
+        double calculateTwoOptCost(int primeiro_indice, int segundo_indice);
+        bool bestImprovementTwoOpt();
+
+        v_inteiros orOpt(v_inteiros sequencia, int primeiro_indice, int segundo_indice, int size);
+        double calculateOrOptCost(int primeiro_indice, int segundo_indice, int size);
+        bool bestImprovementOrOpt(int size);
+
 
         void BuscaLocal();
 
@@ -43,7 +52,7 @@ class ILS
 
         // procedimento que resolve o ILS:
 
-        void Solution();
+        void solve();
 };
 
 // facilita para avaliar o custo das soluções
@@ -54,7 +63,7 @@ ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
     this->maxIterILS = maxIterILS;
 
 
-    Solution();
+    //solve();
     
 }
 
@@ -142,22 +151,21 @@ void ILS :: Construcao(){
    // std:: vector <int> aresta_removida;
 
 
-    int i_menor;
-    int atual, menor_custo;
-    int maximo = CL.size();
+    int indice = 0;
+    int selecionado;
+    int atual;
+    double alpha;
     
-    std::vector<std::vector<int>> arestas;
-    std::vector<int> custos;
-    std::vector<int> aux;
-
+    std::vector<v_inteiros> arestas;
+    std::vector < std::pair <double, int>> custos;
+    v_inteiros aux;
 
 
     while (!CL.empty()){
-
-        arestas.clear();
-        custos.clear();
         
         for (int i = 0; i < CL.size(); i++){
+            arestas.clear();
+            custos.clear();
             for (int j = 0; j < s1.size() - 1; j++){
                 
                 aux.clear();
@@ -166,41 +174,33 @@ void ILS :: Construcao(){
                 atual += distancias->adjMatriz[s1[j + 1]][CL[i]];
                 atual -= distancias->adjMatriz[s1[j]][s1[j + 1]];
 
+    
+
                 aux.push_back(j);
                 aux.push_back(CL[i]);
                 aux.push_back(j + 1);
 
+
+
                 arestas.push_back(aux);
-                custos.push_back(atual);
+                custos.push_back(std::make_pair(atual, indice));
 
                 atual = 0;
+                indice++;
             }
 
-            int cont = 0;
+            sort(custos.begin(), custos.end());
 
-            for (int custo : custos){
-                if (cont == 0){
-                    menor_custo = custo;
-                    i_menor = cont;
-                }
-
-                if (menor_custo > custo){
-                menor_custo = custo;
-                i_menor = cont;
-                }
-
-                cont++;
-
-            }
+            alpha = (double) rand() / RAND_MAX;
+            selecionado = rand() % ((int) ceil(alpha * custos.size()));
             
-        }
     
-        s1.insert(s1.begin() + arestas[i_menor][0], arestas[i_menor][1]);
+        s1.insert(s1.begin() + arestas[selecionado][0], arestas[selecionado][1]);
 
         int a_excluir;
 
         for (int i = 0; i < CL.size(); i++){
-            if (arestas[i_menor][1] == CL[i]){
+            if (CL[i] == arestas[selecionado][1]){
                 a_excluir = i;
                 break;
             }
@@ -209,14 +209,23 @@ void ILS :: Construcao(){
         CL.erase(CL.begin() + a_excluir);
 
     }
-
+    }
+    
     s1.push_back(s1[0]);
 
     this->sequencia = s1;
 
-    } 
+}
 
- v_inteiros ILS:: swap(int primeiro_indice, int segundo_indice, v_inteiros seq){
+/*
+Para simplificar na hora de inserir o novo vértice no vetor, as arestas são salvas na forma:
+
+[indice_v_a_excluir, v_a_inserir, indice_v_seguinte]
+
+Isso acontece por motivos de diminuição da escrita do código na parte do insert(evita provocar confusão)
+*/
+
+ v_inteiros ILS:: swap( v_inteiros seq, int primeiro_indice, int segundo_indice){
     
     int aux;
 
@@ -234,22 +243,22 @@ double ILS :: calculateSwapCost(int primeiro_indice, int segundo_indice){
 
     v_inteiros teste = this->sequencia;
 
-    double antes_swap, depois_swap, delta;
+    double antes, depois, delta;
 
-    antes_swap = calcularValorObj(teste);
+    antes = calcularValorObj(teste);
 
-    teste = swap(primeiro_indice, segundo_indice, teste); 
+    teste = swap(teste, primeiro_indice, segundo_indice); 
 
-    depois_swap = calcularValorObj(teste);
+    depois = calcularValorObj(teste);
 
-    delta = depois_swap - antes_swap;
+    delta = depois - antes;
 
     return delta;
 
 }
 
 bool ILS:: bestImprovementSwap(){
-    int bestDelta = 0;
+    double bestDelta = 0.0;
     int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
 
     for (int i = 1; i < this->sequencia.size() - 1; i++){
@@ -265,7 +274,7 @@ bool ILS:: bestImprovementSwap(){
     }
 
     if (bestDelta < 0){
-        this->sequencia = swap(best_i, best_j, this->sequencia);
+        this->sequencia = swap(this->sequencia, best_i, best_j);
         return true;
     }
 
@@ -273,11 +282,115 @@ bool ILS:: bestImprovementSwap(){
 }
 
 
+v_inteiros ILS:: twoOpt(v_inteiros sequencia, int primeiro_indice, int segundo_indice){
+
+    std::reverse(sequencia.begin() + primeiro_indice, sequencia.begin() + segundo_indice + 1);
+
+    return sequencia;
+
+}
+// Inverte até onde o ponteiro apontar
+
+double ILS:: calculateTwoOptCost(int primeiro_indice, int segundo_indice){
+
+    v_inteiros teste = this->sequencia;
+
+    double antes, depois, delta;
+
+    antes = calcularValorObj(teste);
+
+    teste = twoOpt(teste, primeiro_indice, segundo_indice); 
+
+    depois = calcularValorObj(teste);
+
+    delta = depois - antes;
+
+    return delta;
+}
+
+bool ILS:: bestImprovementTwoOpt(){
+    double bestDelta = 0.0;
+    int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
+
+    for (int i = 1; i < this->sequencia.size() - 1; i++){
+        for (int j = i + 1; j < this->sequencia.size() - 1; j++){
+            double delta = calculateTwoOptCost(i, j);
+           
+
+            if (delta < bestDelta){
+                best_i = i;
+                best_j = j;
+                bestDelta = delta;
+            }
+        }
+    }
+
+    if (bestDelta < 0){
+        this->sequencia = twoOpt(this->sequencia, best_i, best_j);
+        return true;
+    }
+
+    return false;
+}
+
+v_inteiros ILS:: orOpt(v_inteiros sequencia, int primeiro_indice, int segundo_indice, int size){
+
+
+    v_inteiros bloco(sequencia.begin() + primeiro_indice, sequencia.begin() + primeiro_indice + size);
+
+    sequencia.erase(sequencia.begin() + primeiro_indice, sequencia.begin() + primeiro_indice + size);
+    sequencia.insert(sequencia.begin() + segundo_indice, bloco.begin(), bloco.end());
+    
+    return sequencia;
+}
+
+double ILS:: calculateOrOptCost(int primeiro_indice, int segundo_indice, int size){
+    v_inteiros teste = this->sequencia;
+
+    double antes, depois, delta;
+
+    antes = calcularValorObj(teste);
+
+    teste = orOpt(teste, primeiro_indice, segundo_indice, size); 
+
+    depois = calcularValorObj(teste);
+
+    delta = depois - antes;
+
+    return delta;
+
+}
+
+bool ILS:: bestImprovementOrOpt(int size){
+    double bestDelta = 0.0;
+    int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
+
+    for (int i = 1; i < this->sequencia.size() - size; i++){
+        for (int j = i + 1; j < this->sequencia.size() - size; j++){
+            double delta = calculateOrOptCost(i, j, size);
+           
+
+            if (delta < bestDelta){
+                best_i = i;
+                best_j = j;
+                bestDelta = delta;
+            }
+        }
+    }
+
+    if (bestDelta < 0){
+        this->sequencia = orOpt(this->sequencia, best_i, best_j, size);
+        return true;
+    }
+
+    return false;
+}
+
 void ILS:: BuscaLocal(){
 
-     srand(time(NULL));
+    srand(time(NULL));
 
-    std:: vector <int> NL = {1};
+    std:: vector <int> NL = {1, 2, 3, 4, 5};
 
     bool improved = false;
 
@@ -292,12 +405,26 @@ void ILS:: BuscaLocal(){
         case 1:
             improved = bestImprovementSwap();
             break;
+        case 2:
+            improved = bestImprovementTwoOpt();
+            break;
+        case 3:
+            improved = bestImprovementOrOpt(1);
+            break;
+        case 4:
+            improved = bestImprovementOrOpt(2);
+            break;
+        case 5:
+            improved = bestImprovementOrOpt(3);
+            break;
+        
+
         
         }
 
         if (improved)
         
-            NL = {1};
+            NL = {1, 2, 3, 4, 5};
         
 
         else
@@ -334,7 +461,7 @@ void ILS :: perturbacao(){
 
 }
 
-void ILS:: Solution(){
+void ILS:: solve(){
 
     v_inteiros bestOfAll;
     double best_costOfAll = INFINITY;

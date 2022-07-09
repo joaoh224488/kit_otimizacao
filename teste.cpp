@@ -17,12 +17,14 @@ int main(){
             {1, 2, 6, 5, 2, 0}
         };
 
-    int vertices = 6;
 
-    Data *dist = new Data(vertices, adjMatriz);
+    Data *dist = new Data(adjMatriz);
 
-    ILS *Solucao =  new ILS(dist, 50 , 100);
+    //dist->show_data();
 
+    ILS *Solucao =  new ILS(dist, 50, 1);
+
+    Solucao->solve();
     Solucao->exibirSolucao();
 
     return 0;

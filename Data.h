@@ -13,6 +13,7 @@ struct Data
         matriz adjMatriz;
         // Construtor:
         Data(int n_vertices, matriz adjMatriz);
+        Data(matriz adjMatriz);
 
 
         // Método para mostrar coisas do objeto:
@@ -28,6 +29,12 @@ Data:: Data(int n_vertices, matriz adjMatriz){
     this->adjMatriz = adjMatriz;
 }
 
+Data:: Data(matriz adjMatriz){
+
+    this->adjMatriz = adjMatriz;
+
+    this->n_vertices = adjMatriz.size();
+}
 
 void Data:: show_data(){
     std::cout << std::endl;
@@ -39,5 +46,7 @@ void Data:: show_data(){
     }
 
 }
+
+
 
 #endif
