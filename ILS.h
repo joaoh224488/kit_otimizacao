@@ -64,20 +64,19 @@ ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
     //solve();
 }
 
+ILS :: ILS(Data *distancias){
+
+    this->distancias = distancias;
+    this->maxIter = 50;
+    this->maxIterILS = distancias->n_vertices >= 150 ? distancias->n_vertices / 2 : distancias->n_vertices;
+}
+
 double ILS :: get_current_cost(){
     return valorObj;
 }
 
 v_inteiros ILS :: get_current_vector(){
     return sequencia;
-}
-
-
-ILS :: ILS(Data *distancias){
-
-    this->distancias = distancias;
-    this->maxIter = 50;
-    this->maxIterILS = distancias->n_vertices >= 150 ? distancias->n_vertices / 2 : distancias->n_vertices;
 }
 
 
@@ -117,8 +116,6 @@ void ILS :: Construcao(){
     int n_vertices = this->distancias->n_vertices;
 
     int q_tour_inicial = n_vertices / 2;
-
-   
 
     std::vector <int> V;             
     std::vector <int> s1;            
