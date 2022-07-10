@@ -45,7 +45,7 @@ class ILS
 
         // Perturbacao
 
-        void perturbacao();
+        v_inteiros perturbacao(v_inteiros seq);
 
 
         //std::vector<InsertionInfo> calcularCustoInsercao(v_inteiros CL);
@@ -99,7 +99,6 @@ double ILS:: calcularValorObj(v_inteiros sequencia)
 
 
 void ILS :: Construcao(){
-    srand(time(NULL));              // Garante a aleatoriedade do random
 
     int n_vertices = this->distancias->n_vertices;
 
@@ -388,8 +387,6 @@ bool ILS:: bestImprovementOrOpt(int size){
 
 void ILS:: BuscaLocal(){
 
-    srand(time(NULL));
-
     std:: vector <int> NL = {1, 2, 3, 4, 5};
 
     bool improved = false;
@@ -434,34 +431,51 @@ void ILS:: BuscaLocal(){
 
 }
 
-void ILS :: perturbacao(){
+v_inteiros ILS:: perturbacao(v_inteiros seq){
 
-    srand(time(NULL));
+    int n_elem = std::ceil(seq.size() / 10.0);        // numero maximo de elementos
 
-    int n_elem = std::ceil(sequencia.size() / 10.0);     // numero maximo de elementos
+    int n1_elem, n2_elem; 
 
-    int n1_elem, n2_elem; // numero de elementos dos vetores a gerar
+    n1_elem = rand() % n_elem;
 
-    // Escolha de tamanho dos elementos
-    int n1_aleatorio, n2_aleatorio;
+    n2_elem = rand() % n_elem;         
 
-    n1_aleatorio = rand() % n_elem;
+    n1_elem = std::max(2, n1_elem);
 
-    n2_aleatorio = rand() % n_elem;         // NÃO SE PREOCUPE. N_ELEM NUNCA VAI SER 0
+    n2_elem = std::max(2, n2_elem);
 
+    int escolha_1 = 0, escolha_2 = 0, fim_1 = 0, fim_2 = 0;
 
-    n1_elem = n1_aleatorio > 2 ? n1_aleatorio : 2;
+    while ((escolha_1 <= escolha_2 && escolha_2 <= fim_1) || (escolha_2 <= escolha_1 && escolha_1 <= fim_2) )
+    {
+        escolha_1 = rand() % (seq.size() - n1_elem - 1) + 1;
+        n1_elem = std::max(2, rand() % n_elem);
+        fim_1 = escolha_1 + n1_elem - 1;
 
-    n2_elem = n2_aleatorio > 2 ? n2_aleatorio : 2;
+        escolha_2 = rand() % (seq.size() - n2_elem - 1) + 1 ;
+        n2_elem = std::max(2, rand() % n_elem);
+        fim_2 = escolha_2 + n2_elem - 1  ;
+    }
+    
 
-    // Escolha dos elementos a serem trocados
+    v_inteiros bloco1(seq.begin() + escolha_1, seq.begin() + escolha_1 + n1_elem);
+    v_inteiros bloco2(seq.begin() + escolha_2, seq.begin() + escolha_2 + n2_elem);
+    seq.erase(seq.begin() + escolha_1, seq.begin() + escolha_1 + n1_elem);
 
-    // AQUI VOCÊ DEVE DESCOBRIR COMO FAZ PRA INSERIR UM VETOR NO OUTRO
+    seq.insert(seq.begin() + escolha_1, bloco2.begin() , bloco2.end());
 
+    seq.erase(seq.begin() + escolha_2, seq.begin() + escolha_2 + n2_elem);
 
+    seq.insert(seq.begin() + escolha_2, bloco1.begin(), bloco1.end());
+   
+    return seq;
+    
 }
 
 void ILS:: solve(){
+
+    srand(time(NULL));
 
     v_inteiros bestOfAll;
     double best_costOfAll = INFINITY;
@@ -489,8 +503,7 @@ void ILS:: solve(){
                 iterILS = 0;
             }
 
-            //perturbacao();            TERMINAR PERTURBACAO
-
+            this->sequencia = perturbacao(this->sequencia);            
             iterILS++;
 
         }
@@ -507,8 +520,5 @@ void ILS:: solve(){
     valorObj = best_costOfAll;
     
 }
-
-
-
 
 #endif

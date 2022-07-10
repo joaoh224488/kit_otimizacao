@@ -22,7 +22,7 @@ int main(){
 
     //dist->show_data();
 
-    ILS *Solucao =  new ILS(dist, 50, 1);
+    ILS *Solucao =  new ILS(dist, 1, 2);
 
     Solucao->solve();
     Solucao->exibirSolucao();
