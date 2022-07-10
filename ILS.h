@@ -17,12 +17,8 @@ class ILS
         Data *distancias;
         int maxIter;
         int maxIterILS;
-        
-        
-    public:
-        ILS(Data *distancias, int maxIter, int maxIterILS);
 
-        void exibirSolucao();
+        
         double calcularValorObj(v_inteiros sequencia);
 
         void Construcao();
@@ -40,22 +36,24 @@ class ILS
         double calculateOrOptCost(int primeiro_indice, int segundo_indice, int size);
         bool bestImprovementOrOpt(int size);
 
-
         void BuscaLocal();
 
-        // Perturbacao
 
         v_inteiros perturbacao(v_inteiros seq);
+        
+        
+    public:
+        ILS(Data *distancias, int maxIter, int maxIterILS);
+        ILS(Data *distancias);
+        
+        double get_current_cost();
+        v_inteiros get_current_vector();
 
-
-        //std::vector<InsertionInfo> calcularCustoInsercao(v_inteiros CL);
-
-        // procedimento que resolve o ILS:
+        void exibirSolucao();
 
         void solve();
 };
 
-// facilita para avaliar o custo das soluções
 
 ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
     this->distancias = distancias;
@@ -64,17 +62,33 @@ ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
 
 
     //solve();
-    
 }
+
+double ILS :: get_current_cost(){
+    return valorObj;
+}
+
+v_inteiros ILS :: get_current_vector(){
+    return sequencia;
+}
+
+
+ILS :: ILS(Data *distancias){
+
+    this->distancias = distancias;
+    this->maxIter = 50;
+    this->maxIterILS = distancias->n_vertices >= 150 ? distancias->n_vertices / 2 : distancias->n_vertices;
+}
+
 
 void ILS:: exibirSolucao(){
 
     std:: cout << "Sequence:    ";
     for (int i = 0 ; i < this->sequencia.size() - 1 ; i++){ 
-        std::cout << this->sequencia[i] + 1 << " -> ";
+        std::cout << this->sequencia[i] << " -> ";
     }
 
-    std::cout << this-> sequencia.back() + 1 << std::endl;
+    std::cout << this-> sequencia.back() << std::endl;
 
     std:: cout << "Cost:  " << calcularValorObj(sequencia) << std::endl; 
 }
@@ -104,13 +118,12 @@ void ILS :: Construcao(){
 
     int q_tour_inicial = n_vertices / 2;
 
-    // SEÇÃO PARA PARTES 1 E 2 DAS ETAPAS DO MÉTODO CONSTRUÇÃO:
+   
 
-    std::vector <int> V;             // Todos os vértices
-    std::vector <int> s1;            // Solução aleatória
-    std::vector <int> CL;            // Vértices a inserir
+    std::vector <int> V;             
+    std::vector <int> s1;            
+    std::vector <int> CL;           
 
-    // PREENCHENDO V COM OS VÉRTICES:
 
     for (int i = 0; i < n_vertices; i++){
 
@@ -119,17 +132,9 @@ void ILS :: Construcao(){
 
     CL = V;
 
-    // PROVAVELMENTE VAI TER UM FOR DAQUI PRA 
-  
-    // DESORDENANDO A LISTA DE CANDIDATOS
     std::random_shuffle(CL.begin(), CL.end());
 
-
-    // 3, 0, 1, 5, 4, 2, 6
-    
-    int chs;                            // Chosen
-
-    // GERANDO A SOLUÇÃO INICIAL(s1) E A LISTA DE CANDIDATOS (CL)
+    int chs;                         
 
 
     for (int i = 0; i < q_tour_inicial; i++){
@@ -139,16 +144,6 @@ void ILS :: Construcao(){
 
         CL.erase(remove(CL.begin(), CL.end(), chs), CL.end());
     }
-
-    
-   // s1.push_back(s1[0]);
-
-    // MESMA COISA QUE A STRUCT SÓ QUE FUNCIONA
-    
-    //std:: vector <double> custos;
-   // std:: vector <int> no_inserido;
-   // std:: vector <int> aresta_removida;
-
 
     int indice = 0;
     int selecionado;
@@ -172,8 +167,6 @@ void ILS :: Construcao(){
                 atual += distancias->adjMatriz[s1[j]][CL[i]];
                 atual += distancias->adjMatriz[s1[j + 1]][CL[i]];
                 atual -= distancias->adjMatriz[s1[j]][s1[j + 1]];
-
-    
 
                 aux.push_back(j);
                 aux.push_back(CL[i]);
@@ -258,7 +251,7 @@ double ILS :: calculateSwapCost(int primeiro_indice, int segundo_indice){
 
 bool ILS:: bestImprovementSwap(){
     double bestDelta = 0.0;
-    int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
+    int best_i, best_j;            
 
     for (int i = 1; i < this->sequencia.size() - 1; i++){
         for (int j = i + 1; j < this->sequencia.size() - 1; j++){
@@ -288,7 +281,7 @@ v_inteiros ILS:: twoOpt(v_inteiros sequencia, int primeiro_indice, int segundo_i
     return sequencia;
 
 }
-// Inverte até onde o ponteiro apontar
+
 
 double ILS:: calculateTwoOptCost(int primeiro_indice, int segundo_indice){
 
@@ -309,7 +302,7 @@ double ILS:: calculateTwoOptCost(int primeiro_indice, int segundo_indice){
 
 bool ILS:: bestImprovementTwoOpt(){
     double bestDelta = 0.0;
-    int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
+    int best_i, best_j;             
 
     for (int i = 1; i < this->sequencia.size() - 1; i++){
         for (int j = i + 1; j < this->sequencia.size() - 1; j++){
@@ -362,7 +355,7 @@ double ILS:: calculateOrOptCost(int primeiro_indice, int segundo_indice, int siz
 
 bool ILS:: bestImprovementOrOpt(int size){
     double bestDelta = 0.0;
-    int best_i, best_j;             // Perceba que o algoritmo nunca mexe com as pontas do vector sequencia
+    int best_i, best_j;             
 
     for (int i = 1; i < this->sequencia.size() - size; i++){
         for (int j = i + 1; j < this->sequencia.size() - size; j++){
@@ -433,7 +426,7 @@ void ILS:: BuscaLocal(){
 
 v_inteiros ILS:: perturbacao(v_inteiros seq){
 
-    int n_elem = std::ceil(seq.size() / 10.0);        // numero maximo de elementos
+    int n_elem = std::ceil(seq.size() / 10.0);       
 
     int n1_elem, n2_elem; 
 
@@ -503,9 +496,9 @@ void ILS:: solve(){
                 iterILS = 0;
             }
 
+
             this->sequencia = perturbacao(this->sequencia);            
             iterILS++;
-
         }
         
         if (best_cost < best_costOfAll){
