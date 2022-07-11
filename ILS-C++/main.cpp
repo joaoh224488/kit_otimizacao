@@ -1,8 +1,12 @@
 
 #include <iostream>
+
+
 #include "ILS.h"
 #include "Data.h"
 
+using namespace N;
+using namespace D;
 using namespace std;
 
 int main(){
