@@ -54,10 +54,10 @@ double ILS:: calcularValorObj(v_inteiros sequencia)
 
            
              
-                valorObj += (double) distancias->adjMatriz[sequencia[i]][sequencia[i+1]];
+                valorObj += distancias->adjMatriz[sequencia[i]][sequencia[i+1]];
                 
             }
-            valorObj += (double) distancias->adjMatriz[sequencia.back()][sequencia[0]];
+            valorObj += distancias->adjMatriz[sequencia.back()][sequencia[0]];
 
             return valorObj;
   
@@ -75,7 +75,7 @@ void ILS :: Construcao(){
     std::vector <int> CL;           
 
 
-    for (int i = 0; i < n_vertices; i++){
+    for (int i = 1; i <= n_vertices; i++){
 
         V.push_back(i);                             
     }
@@ -379,15 +379,7 @@ v_inteiros ILS:: perturbacao(v_inteiros seq){
     int n_elem = std::ceil(seq.size() / 10.0);       
 
     int n1_elem, n2_elem; 
-
-    n1_elem = rand() % n_elem;
-
-    n2_elem = rand() % n_elem;         
-
-    n1_elem = std::max(2, n1_elem);
-
-    n2_elem = std::max(2, n2_elem);
-
+                                                  //  PROBLEMA NA PERTURBACAO
     int escolha_1 = 0, escolha_2 = 0, fim_1 = 0, fim_2 = 0;
 
     while ((escolha_1 <= escolha_2 && escolha_2 <= fim_1) || (escolha_2 <= escolha_1 && escolha_1 <= fim_2) )
@@ -396,7 +388,7 @@ v_inteiros ILS:: perturbacao(v_inteiros seq){
         n1_elem = std::max(2, rand() % n_elem);
         fim_1 = escolha_1 + n1_elem - 1;
 
-        escolha_2 = rand() % (seq.size() - n2_elem - 1) + 1 ;
+        escolha_2 = rand() % (seq.size() - n2_elem - 1) + 1;
         n2_elem = std::max(2, rand() % n_elem);
         fim_2 = escolha_2 + n2_elem - 1  ;
     }
@@ -447,7 +439,7 @@ void ILS:: solve(){
             }
 
 
-            this->sequencia = perturbacao(this->sequencia);            
+            //this->sequencia = perturbacao(this->sequencia);            
             iterILS++;
         }
         
