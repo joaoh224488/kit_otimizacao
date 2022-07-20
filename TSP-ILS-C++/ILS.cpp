@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -152,6 +153,7 @@ void ILS :: Construcao(){
     s1.push_back(s1[0]);
 
     this->sequencia = s1;
+    this->valorObj = calcularValorObj(s1);
 
 }
 
@@ -172,17 +174,32 @@ void ILS :: Construcao(){
 
 double ILS :: calculateSwapCost(int primeiro_indice, int segundo_indice){
 
-    v_inteiros teste = this->sequencia;
+    double  a_subtrair, a_somar, delta;
 
-    double antes, depois, delta;
+    if ((segundo_indice == primeiro_indice + 1)){
 
-    antes = calcularValorObj(teste);
+        a_subtrair = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[primeiro_indice]]
+    
+        + distancias->adjMatriz[this->sequencia[segundo_indice]][this->sequencia[segundo_indice + 1]];
 
-    teste = swap(teste, primeiro_indice, segundo_indice); 
+        a_somar = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[segundo_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice]][this->sequencia[segundo_indice + 1]];
+    }
+    else{
+         a_subtrair = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[primeiro_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice]][this->sequencia[primeiro_indice + 1]]
+        + distancias->adjMatriz[this->sequencia[segundo_indice - 1]][this->sequencia[segundo_indice]]
+        + distancias->adjMatriz[this->sequencia[segundo_indice]][this->sequencia[segundo_indice + 1]];
+       
 
-    depois = calcularValorObj(teste);
+        a_somar = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[segundo_indice]]
+        + distancias->adjMatriz[this->sequencia[segundo_indice]][this->sequencia[primeiro_indice + 1]] 
+        + distancias->adjMatriz[this->sequencia[segundo_indice - 1]][this->sequencia[primeiro_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice]][this->sequencia[segundo_indice + 1]];
+    }
 
-    delta = depois - antes;
+
+    delta = a_somar - a_subtrair;
 
     return delta;
 
@@ -224,17 +241,17 @@ v_inteiros ILS:: twoOpt(v_inteiros sequencia, int primeiro_indice, int segundo_i
 
 double ILS:: calculateTwoOptCost(int primeiro_indice, int segundo_indice){
 
-    v_inteiros teste = this->sequencia;
+    double a_subtrair, a_somar, delta;
 
-    double antes, depois, delta;
+    a_subtrair = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[primeiro_indice]] 
+    + distancias->adjMatriz[this->sequencia[segundo_indice]][this->sequencia[segundo_indice + 1]];
 
-    antes = calcularValorObj(teste);
+    a_somar = distancias->adjMatriz[this->sequencia[primeiro_indice -1]][this->sequencia[segundo_indice]]
+    + distancias->adjMatriz[this->sequencia[primeiro_indice]][this->sequencia[segundo_indice + 1]];
 
-    teste = twoOpt(teste, primeiro_indice, segundo_indice); 
+    delta = a_somar - a_subtrair;
 
-    depois = calcularValorObj(teste);
-
-    delta = depois - antes;
+    return delta;
 
     return delta;
 }
@@ -258,6 +275,7 @@ bool ILS:: bestImprovementTwoOpt(){
 
     if (bestDelta < 0){
         this->sequencia = twoOpt(this->sequencia, best_i, best_j);
+   
         return true;
     }
 
@@ -319,7 +337,7 @@ bool ILS:: bestImprovementOrOpt(int size){
 
 void ILS:: BuscaLocal(){
 
-    std:: vector <int> NL = {1, 2, 3, 4, 5};
+    std:: vector <int> NL = {1, 2};
 
     bool improved = false;
 
@@ -332,7 +350,7 @@ void ILS:: BuscaLocal(){
         {
 
         case 1:
-            improved = bestImprovementSwap();
+             improved = bestImprovementSwap();
             break;
         case 2:
             improved = bestImprovementTwoOpt();
@@ -353,7 +371,7 @@ void ILS:: BuscaLocal(){
 
         if (improved)
         
-            NL = {1, 2, 3, 4, 5};
+            NL = {1, 2};
         
 
         else
@@ -426,6 +444,7 @@ void ILS:: solve(){
         {
           
             BuscaLocal();
+            // MUDAR OS BESTS PARA ADICIONAR O DELTA
 
             if (calcularValorObj(sequencia) < best_cost)
 
@@ -455,4 +474,6 @@ void ILS:: solve(){
     valorObj = best_costOfAll;
     
 }
+
+
 
