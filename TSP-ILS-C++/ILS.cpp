@@ -48,16 +48,14 @@ void ILS:: exibirSolucao(){
 
 double ILS:: calcularValorObj(v_inteiros sequencia)
 {
-            double valorObj = 0.0;
-            for(int i = 0; i < sequencia.size() - 1; i++){
+    double valorObj = 0.0;
+    for(int i = 0; i < sequencia.size() - 1; i++){
 
-           
-             
-                valorObj += distancias->adjMatriz[sequencia[i]][sequencia[i+1]];
-                
-            }
-            return valorObj;
-  
+        valorObj += distancias->adjMatriz[sequencia[i]][sequencia[i+1]];
+        
+    }
+    return valorObj;
+
 }
 
 
@@ -65,11 +63,11 @@ void ILS :: Construcao(){
 
     int n_vertices = this->distancias->n_vertices;
 
-    int q_tour_inicial = n_vertices / 2;
+    int q_tour_inicial = 2;
 
-    std::vector <int> V;             
-    std::vector <int> s1;            
-    std::vector <int> CL;           
+    v_inteiros V;             
+    v_inteiros s1;            
+    v_inteiros CL;           
 
 
     for (int i = 1; i <= n_vertices; i++){
@@ -94,7 +92,7 @@ void ILS :: Construcao(){
 
     int indice = 0;
     int selecionado;
-    int atual;
+    double atual;
     double alpha;
     
     std::vector<v_inteiros> arestas;
@@ -252,8 +250,6 @@ double ILS:: calculateTwoOptCost(int primeiro_indice, int segundo_indice){
     delta = a_somar - a_subtrair;
 
     return delta;
-
-    return delta;
 }
 
 bool ILS:: bestImprovementTwoOpt(){
@@ -338,7 +334,7 @@ bool ILS:: bestImprovementOrOpt(int size){
     int best_i, best_j;             
 
     for (int i = 1; i < this->sequencia.size() - size; i++){
-        for (int j = i + 1; j < this->sequencia.size() - size; j++){
+        for (int j = 1; j < this->sequencia.size() - size; j++){
             double delta = calculateOrOptCost(i, j, size);
            
 
@@ -497,6 +493,5 @@ void ILS:: solve(){
     valorObj = best_costOfAll;
     
 }
-
 
 
