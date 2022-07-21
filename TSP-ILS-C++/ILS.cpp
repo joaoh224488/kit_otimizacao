@@ -293,18 +293,41 @@ v_inteiros ILS:: orOpt(v_inteiros sequencia, int primeiro_indice, int segundo_in
     return sequencia;
 }
 
+
 double ILS:: calculateOrOptCost(int primeiro_indice, int segundo_indice, int size){
-    v_inteiros teste = this->sequencia;
 
-    double antes, depois, delta;
+    double a_subtrair, a_somar, delta;
 
-    antes = calcularValorObj(teste);
 
-    teste = orOpt(teste, primeiro_indice, segundo_indice, size); 
+    if (segundo_indice > primeiro_indice) { 
 
-    depois = calcularValorObj(teste);
+        a_subtrair = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[primeiro_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice + size - 1]][this->sequencia[primeiro_indice + size]]
+        + distancias->adjMatriz[this->sequencia[segundo_indice + size - 1]][this->sequencia[segundo_indice + size]];
 
-    delta = depois - antes;
+        a_somar = distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[primeiro_indice + size]]
+        + distancias->adjMatriz[this->sequencia[segundo_indice + size - 1]][this->sequencia[primeiro_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice + size - 1 ]][this->sequencia[segundo_indice + size]];
+
+    }
+
+    else if (primeiro_indice > segundo_indice){
+
+        a_subtrair =  distancias->adjMatriz[this->sequencia[segundo_indice - 1]][this->sequencia[segundo_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice - 1]][this->sequencia[primeiro_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice + size -1]][this->sequencia[primeiro_indice + size]];
+
+        a_somar = distancias->adjMatriz[this->sequencia[segundo_indice - 1]][this->sequencia[primeiro_indice]]
+        + distancias->adjMatriz[this->sequencia[primeiro_indice + size - 1]][this->sequencia[segundo_indice]] 
+        + distancias->adjMatriz[this->sequencia[primeiro_indice -1]][this->sequencia[primeiro_indice + size]] ;
+        }
+
+    else {
+        return 0;
+    }
+
+
+    delta = a_somar - a_subtrair;
 
     return delta;
 
@@ -337,7 +360,7 @@ bool ILS:: bestImprovementOrOpt(int size){
 
 void ILS:: BuscaLocal(){
 
-    std:: vector <int> NL = {1, 2};
+    v_inteiros NL = {1, 2, 3, 4, 5};
 
     bool improved = false;
 
@@ -371,7 +394,7 @@ void ILS:: BuscaLocal(){
 
         if (improved)
         
-            NL = {1, 2};
+            NL = {1, 2, 3, 4, 5};
         
 
         else
@@ -440,17 +463,19 @@ void ILS:: solve(){
 
         int iterILS = 0;
 
+        std:: cout << "Iteração:    " << i + 1 << std:: endl;
         while (iterILS <= maxIterILS)
         {
           
             BuscaLocal();
-            // MUDAR OS BESTS PARA ADICIONAR O DELTA
 
-            if (calcularValorObj(sequencia) < best_cost)
+            this->valorObj = calcularValorObj(sequencia);
+
+            if (this->valorObj < best_cost)
 
             {
                 best = sequencia;
-                best_cost = calcularValorObj(sequencia);
+                best_cost = this->valorObj;
                 iterILS = 0;
             }
 
@@ -464,8 +489,6 @@ void ILS:: solve(){
             bestOfAll = best;
             best_costOfAll = best_cost;
         }
-
-        std:: cout << "Iteração:    " << i + 1 << std:: endl;
 
     }
 

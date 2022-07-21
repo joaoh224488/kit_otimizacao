@@ -19,7 +19,10 @@ int main(int argc, char *argv[]){
 
     ILS *Solucao =  new ILS(dist);
 
-   
+
+    //Solucao->Construcao();
+    //Solucao->exibirSolucao();
+    //bool a = Solucao->bestImprovementSwap();
     Solucao->solve();
     Solucao->exibirSolucao();
 

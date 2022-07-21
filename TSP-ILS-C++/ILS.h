@@ -9,17 +9,15 @@ using namespace D;
 namespace N
 
 {
-
     class ILS
     {
-        private:
+        public:
             v_inteiros sequencia;
             double valorObj;
 
             Data *distancias;
             int maxIter;
             int maxIterILS;
-
             
             double calcularValorObj(v_inteiros sequencia);
 
@@ -54,6 +52,9 @@ namespace N
 
             void solve();
 };
+
+
+
 
 }
 
