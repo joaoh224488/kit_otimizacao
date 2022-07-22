@@ -221,6 +221,7 @@ bool ILS:: bestImprovementSwap(){
 
     if (bestDelta < 0){
         this->sequencia = swap(this->sequencia, best_i, best_j);
+        this->valorObj += bestDelta;
         return true;
     }
 
@@ -271,6 +272,7 @@ bool ILS:: bestImprovementTwoOpt(){
 
     if (bestDelta < 0){
         this->sequencia = twoOpt(this->sequencia, best_i, best_j);
+        this->valorObj += bestDelta;
    
         return true;
     }
@@ -348,6 +350,7 @@ bool ILS:: bestImprovementOrOpt(int size){
 
     if (bestDelta < 0){
         this->sequencia = orOpt(this->sequencia, best_i, best_j, size);
+        this->valorObj += bestDelta;
         return true;
     }
 
@@ -402,6 +405,8 @@ void ILS:: BuscaLocal(){
 
 v_inteiros ILS:: perturbacao(v_inteiros seq){
 
+    seq.pop_back();
+
     int n_elem = std::ceil(seq.size() / 10.0);       
 
     int n1_elem, n2_elem; 
@@ -411,11 +416,11 @@ v_inteiros ILS:: perturbacao(v_inteiros seq){
     while ((escolha_1 <= escolha_2 && escolha_2 <= fim_1) || (escolha_2 <= escolha_1 && escolha_1 <= fim_2) )
     {
         n1_elem = std::max(2, rand() % n_elem);
-        escolha_1 = rand() % (seq.size() - n1_elem - 1) + 1;
+        escolha_1 = rand() % (seq.size() - n1_elem);
         fim_1 = escolha_1 + n1_elem - 1;
 
         n2_elem = std::max(2, rand() % n_elem);
-        escolha_2 = rand() % (seq.size() - n2_elem - 1) + 1 ;
+        escolha_2 = rand() % (seq.size() - n2_elem) ;
         fim_2 = escolha_2 + n2_elem - 1  ;
     }
 
@@ -437,7 +442,7 @@ v_inteiros ILS:: perturbacao(v_inteiros seq){
         seq.insert(seq.begin() + escolha_2, bloco1.begin(), bloco1.end());
     }
 
-    
+    seq.push_back(seq[0]);
     return seq;
     
 }
@@ -455,7 +460,7 @@ void ILS:: solve(){
 
         v_inteiros best = this->sequencia;
 
-        double best_cost = calcularValorObj(sequencia);
+        double best_cost = this->valorObj;
 
         int iterILS = 0;
 
@@ -466,7 +471,7 @@ void ILS:: solve(){
             BuscaLocal();
 
             this->valorObj = calcularValorObj(sequencia);
-
+            
             if (this->valorObj < best_cost)
 
             {
@@ -488,9 +493,9 @@ void ILS:: solve(){
 
     }
 
-    sequencia = bestOfAll;
+    this->sequencia = bestOfAll;
 
-    valorObj = best_costOfAll;
+    this->valorObj = best_costOfAll;
     
 }
 
