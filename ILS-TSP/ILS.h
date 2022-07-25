@@ -40,6 +40,9 @@ namespace ILS_Class{
         double calculateOrOptCost(int primeiro_indice, int segundo_indice, int size);
         bool bestImprovementOrOpt(int size);
 
+        void perturbacao();
+        double calculatePerturbacaoCost(int i, int size_i, int j, int size_j);
+
         void BuscaLocal();
         void solve();
 

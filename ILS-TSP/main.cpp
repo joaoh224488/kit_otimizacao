@@ -17,12 +17,10 @@ int main(int argc, char *argv[]){
     
     Data *dist = new Data(dimension, matrizAdj);
 
-    ILS *Solucao =  new ILS(dist, 50, 1);
+    ILS *Solucao =  new ILS(dist);
 
-
-    //Solucao->Construcao();
-    //Solucao->exibirSolucao();
-    //bool a = Solucao->bestImprovementSwap();
+    
+ 
 
     /*
     for (int i = 1; i <=14; i ++){
@@ -36,8 +34,8 @@ int main(int argc, char *argv[]){
     
 
 
-    Solucao->solve();
-    Solucao->exibirSolucao();
+   Solucao->solve();
+   Solucao->exibirSolucao();
 
     
    // cout << Solucao->delta << endl;

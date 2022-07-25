@@ -36,7 +36,7 @@ v_inteiros ILS :: get_current_vector(){
 }
 
 void ILS:: exibirSolucao(){
-    this->s->calcularValorObj(distancias);
+    //this->s->calcularValorObj(distancias);
     this->s->exibirSequencia();
 }
 
@@ -337,6 +337,85 @@ void ILS:: BuscaLocal(){
 
 }
 
+void ILS:: perturbacao(){
+  
+    int n_elem = std::ceil(s->sequencia.size() / 10.0);       
+
+    int n1_elem, n2_elem; 
+
+    int escolha_1 = 0, escolha_2 = 0, fim_1 = 0, fim_2 = 0;
+
+    while ((escolha_1 <= escolha_2 && escolha_2 <= fim_1) || (escolha_2 <= escolha_1 && escolha_1 <= fim_2) )
+    {
+        n1_elem = std::max(2, rand() % n_elem);
+        escolha_1 = rand() % (s->sequencia.size() - n1_elem - 1) + 1;
+        fim_1 = escolha_1 + n1_elem - 1;
+
+        n2_elem = std::max(2, rand() % n_elem);
+        escolha_2 = rand() % (s->sequencia.size() - n2_elem - 1) + 1 ;
+        fim_2 = escolha_2 + n2_elem - 1  ;
+    }
+
+    v_inteiros bloco1(s->sequencia.begin() + escolha_1, s->sequencia.begin() + escolha_1 + n1_elem);
+    v_inteiros bloco2(s->sequencia.begin() + escolha_2, s->sequencia.begin() + escolha_2 + n2_elem);
+
+    s->valorObj += calculatePerturbacaoCost(escolha_1, n1_elem, escolha_2, n2_elem);
+
+    if (escolha_1 < escolha_2)
+    {
+        s->sequencia.erase(s->sequencia.begin() + escolha_2, s->sequencia.begin() + escolha_2 + n2_elem);
+        s->sequencia.insert(s->sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
+        s->sequencia.erase(s->sequencia.begin() + escolha_1, s->sequencia.begin() + escolha_1 + n1_elem);
+        s->sequencia.insert(s->sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
+    }
+    else
+    {
+        s->sequencia.erase(s->sequencia.begin() + escolha_1, s->sequencia.begin() + escolha_1 + n1_elem);
+        s->sequencia.insert(s->sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
+        s->sequencia.erase(s->sequencia.begin() + escolha_2, s->sequencia.begin() + escolha_2 + n2_elem);
+        s->sequencia.insert(s->sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
+    }
+
+
+
+}
+
+
+
+double ILS:: calculatePerturbacaoCost(int i, int size_i, int j, int size_j){
+
+    double a_subtrair, a_somar, delta;
+
+    if (i + size_i == j){
+
+        a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(i + size_i - 1, j)
+                   + distanciaEntreVertices(j + size_j - 1, j + size_j);
+        
+        a_somar = distanciaEntreVertices(i - 1, j) + distanciaEntreVertices(j + size_j - 1, i) 
+                + distanciaEntreVertices(i + size_i - 1, j + size_j);
+    }
+    else if (j + size_j == i){
+
+        a_subtrair = distanciaEntreVertices(j - 1, j) + distanciaEntreVertices(j + size_j - 1, i)
+                   + distanciaEntreVertices(i + size_i - 1, i + size_i);
+        
+        a_somar = distanciaEntreVertices(j - 1, i) + distanciaEntreVertices(i + size_i - 1, j)
+                + distanciaEntreVertices(j + size_j - 1, i + size_i);
+    }
+
+    else{
+        a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(i + size_i - 1, i + size_i)
+                + distanciaEntreVertices(j - 1, j) + distanciaEntreVertices(j + size_j - 1, j + size_j);
+        
+        a_somar = distanciaEntreVertices(i - 1, j) + distanciaEntreVertices(j + size_j - 1, i + size_i)
+                + distanciaEntreVertices(j - 1, i) + distanciaEntreVertices(i + size_i - 1, j + size_j);
+    }
+
+    delta = a_somar - a_subtrair;
+
+    return delta;
+}
+
 void ILS:: solve(){
     srand(time(NULL));
 
@@ -353,7 +432,8 @@ void ILS:: solve(){
 
         int iterILS = 0;
 
-        std:: cout << "Iteração:    " << i + 1 << std:: endl;
+        cout << "Iteração:    " << i + 1 << endl;
+     
         while (iterILS <= maxIterILS)
         {
             BuscaLocal();
@@ -366,7 +446,9 @@ void ILS:: solve(){
                 iterILS = 0;
             }
 
-            //this->sequencia = perturbacao(this->sequencia);            
+            perturbacao();
+      
+
             iterILS++;
         }
         if (best_cost < best_costOfAll){
@@ -379,9 +461,3 @@ void ILS:: solve(){
     s->sequencia = bestOfAll;
     s->valorObj = best_costOfAll;
 }
-/*
- for (auto k: CL){
-        cout << k << " ->  ";
-    }
-   cout <<  endl;
-*/
