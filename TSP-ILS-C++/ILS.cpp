@@ -42,7 +42,7 @@ void ILS:: exibirSolucao(){
 
     std::cout << this-> sequencia.back() << std::endl;
 
-    std:: cout << "Cost:  " << calcularValorObj(sequencia) << std::endl; 
+    std:: cout << "Cost:  " << this->valorObj << std::endl; 
 }
 
 
@@ -221,7 +221,6 @@ bool ILS:: bestImprovementSwap(){
 
     if (bestDelta < 0){
         this->sequencia = swap(this->sequencia, best_i, best_j);
-        this->valorObj += bestDelta;
         return true;
     }
 
@@ -272,7 +271,6 @@ bool ILS:: bestImprovementTwoOpt(){
 
     if (bestDelta < 0){
         this->sequencia = twoOpt(this->sequencia, best_i, best_j);
-        this->valorObj += bestDelta;
    
         return true;
     }
@@ -350,7 +348,6 @@ bool ILS:: bestImprovementOrOpt(int size){
 
     if (bestDelta < 0){
         this->sequencia = orOpt(this->sequencia, best_i, best_j, size);
-        this->valorObj += bestDelta;
         return true;
     }
 
@@ -372,7 +369,7 @@ void ILS:: BuscaLocal(){
         {
 
         case 1:
-             improved = bestImprovementSwap();
+            improved = bestImprovementSwap();
             break;
         case 2:
             improved = bestImprovementTwoOpt();
@@ -386,18 +383,15 @@ void ILS:: BuscaLocal(){
         case 5:
             improved = bestImprovementOrOpt(3);
             break;
-        
-
-        
         }
 
-        if (improved)
-        
+        if (improved){
             NL = {1, 2, 3, 4, 5};
-        
+        }
 
-        else
+        else{
             NL.erase(NL.begin() + n);
+        }
     
     }
 
@@ -454,6 +448,7 @@ void ILS:: solve(){
     v_inteiros bestOfAll;
     double best_costOfAll = INFINITY;
 
+
     for (int i = 0; i < maxIter; i++){
 
         Construcao();
@@ -470,12 +465,12 @@ void ILS:: solve(){
           
             BuscaLocal();
 
-            this->valorObj = calcularValorObj(sequencia);
+            this->valorObj = calcularValorObj(sequencia);   // DESNECESSÁRIO!!!!
             
-            if (this->valorObj < best_cost)
+            if (this-> valorObj < best_cost)
 
-            {
-                best = sequencia;
+            {  
+                best = this->sequencia;
                 best_cost = this->valorObj;
                 iterILS = 0;
             }
@@ -486,7 +481,6 @@ void ILS:: solve(){
         }
         
         if (best_cost < best_costOfAll){
-
             bestOfAll = best;
             best_costOfAll = best_cost;
         }
@@ -496,6 +490,7 @@ void ILS:: solve(){
     this->sequencia = bestOfAll;
 
     this->valorObj = best_costOfAll;
+
     
 }
 
