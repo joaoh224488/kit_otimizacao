@@ -11,7 +11,7 @@ namespace ILS_Class{
     {
     private:
         Data *distancias;
-        Solucao *s;
+        Solucao *s_final;
         int maxIter;
         int maxIterILS;
 
@@ -22,34 +22,33 @@ namespace ILS_Class{
 
 
         double get_current_cost();
-        double distanciaEntreVertices(int a, int b);
+        double distanciaEntreVertices(Solucao *s, int a, int b);
         v_inteiros get_current_vector();
 
         void exibirSolucao();
-        void Construcao();
+        Solucao Construcao();
 
-        void swap(int i, int j);
-        double calculateSwapCost(int i, int j);
-        bool bestImprovementSwap();
+        void swap(Solucao *s, int i, int j);
+        double calculateSwapCost(Solucao *s, int i, int j);
+        bool bestImprovementSwap(Solucao *s);
 
-        void twoOpt(int i, int j);
-        double calculateTwoOptCost(int i, int j);
-        bool bestImprovementTwoOpt();
+        void twoOpt(Solucao *s, int i, int j);
+        double calculateTwoOptCost(Solucao *s, int i, int j);
+        bool bestImprovementTwoOpt(Solucao *s);
 
-        void orOpt(int i, int j, int size);
-        double calculateOrOptCost(int primeiro_indice, int segundo_indice, int size);
-        bool bestImprovementOrOpt(int size);
+        void orOpt(Solucao *s, int i, int j, int size);
+        double calculateOrOptCost(Solucao *s, int primeiro_indice, int segundo_indice, int size);
+        bool bestImprovementOrOpt(Solucao *s, int size);
 
-        void perturbacao();
-        double calculatePerturbacaoCost(int i, int size_i, int j, int size_j);
+        Solucao perturbacao(Solucao *s);
+        double calculatePerturbacaoCost(Solucao *s, int i, int size_i, int j, int size_j);
 
-        void BuscaLocal();
+        void BuscaLocal(Solucao *s);
         void solve();
 
 
 
     };
-    
     
 
 

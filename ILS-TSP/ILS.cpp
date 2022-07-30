@@ -1,4 +1,5 @@
 #include "ILS.h"
+#include <limits>
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -11,7 +12,7 @@ ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
     this->distancias = distancias;
     this->maxIter = maxIter;
     this->maxIterILS = maxIterILS;
-    this->s = new Solucao();
+    this->s_final = new Solucao();
 
 }
 
@@ -20,34 +21,35 @@ ILS :: ILS(Data *distancias){
     this->distancias = distancias;
     this->maxIter = 50;
     this->maxIterILS = distancias->n_vertices >= 150 ? distancias->n_vertices / 2 : distancias->n_vertices;
-    this->s = new Solucao();
+    this->s_final = new Solucao();
 }
 
 
 double ILS :: get_current_cost(){
-    return this->s->valorObj;
+    return this->s_final->valorObj;
 }
-double ILS:: distanciaEntreVertices(int a, int b){
+double ILS:: distanciaEntreVertices(Solucao *s, int a, int b){
     return distancias->adjMatriz[s->valorNaPos(a)][s->valorNaPos(b)];
 }
 
 v_inteiros ILS :: get_current_vector(){
-    return this->s->sequencia;
+    return this->s_final->sequencia;
 }
 
 void ILS:: exibirSolucao(){
     //this->s->calcularValorObj(distancias);
-    this->s->exibirSequencia();
+    s_final->exibirSequencia();
 }
 
-void ILS:: Construcao(){
+Solucao ILS:: Construcao(){
+
+    Solucao s1;
  
     int n_vertices = this->distancias->n_vertices;
 
-    int q_tour_inicial = 2;
+    int q_tour_inicial = 3;
 
-    v_inteiros V;             
-    v_inteiros s1;            
+    v_inteiros V;                         
     v_inteiros CL;     
 
     for (int i = 1; i <= n_vertices; i++){
@@ -65,73 +67,38 @@ void ILS:: Construcao(){
     for (int i = 0; i < q_tour_inicial; i++){
         chs = CL[i];
 
-        s1.push_back(chs);
+        s1.sequencia.push_back(chs);
 
         CL.erase(remove(CL.begin(), CL.end(), chs), CL.end());
+    }   
+
+    s1.sequencia.push_back(s1.sequencia[0]);
+
+
+    while (!CL.empty()){
+    
+        vector<InsertionInfo> infoCusto;
+    
+        infoCusto = InsertionInfo::calcularCustoInsercao(&s1, distancias->adjMatriz, CL);
+        sort(infoCusto.begin(), infoCusto.end(), InsertionInfo::ordernarPorCusto);
+
+        double alpha = (double) rand() / RAND_MAX;
+        int selecionado = rand() % ((int) ceil(alpha * infoCusto.size()));
+
+        inserirNaSolucao(&s1, infoCusto, selecionado);
+
+        CL.erase(remove(CL.begin(), CL.end(), infoCusto[selecionado].noInserido), CL.end());    
+
+    
     }
 
-    int indice = 0;
-    int selecionado;
-    double atual;
-    double alpha;
-    
-    std::vector<v_inteiros> arestas;
-    std::vector < std::pair <double, int>> custos;
-    v_inteiros aux;      
+    s1.calcularValorObj(distancias);
 
-        while (!CL.empty()){
-        
-        for (int i = 0; i < CL.size(); i++){
-            arestas.clear();
-            custos.clear();
-            for (int j = 0; j < s1.size() - 1; j++){
-                
-                aux.clear();
-                    
-                atual += distancias->adjMatriz[s1[j]][CL[i]];
-                atual += distancias->adjMatriz[s1[j + 1]][CL[i]];
-                atual -= distancias->adjMatriz[s1[j]][s1[j + 1]];
-
-                aux.push_back(j);
-                aux.push_back(CL[i]);
-
-                arestas.push_back(aux);
-                custos.push_back(std::make_pair(atual, indice));
-
-                atual = 0;
-                indice++;
-            }
-
-            sort(custos.begin(), custos.end());
-
-            alpha = (double) rand() / RAND_MAX;
-            selecionado = rand() % ((int) ceil(alpha * custos.size()));
-            
-    
-        s1.insert(s1.begin() + arestas[selecionado][0], arestas[selecionado][1]);
-
-        int a_excluir;
-
-        for (int i = 0; i < CL.size(); i++){
-            if (CL[i] == arestas[selecionado][1]){
-                a_excluir = i;
-                break;
-            }
-        }
-
-        CL.erase(CL.begin() + a_excluir);
-
-    }
-    }
-    
-    s1.push_back(s1[0]);
-
-    this->s->setSequence(s1);
-    this->s->calcularValorObj(distancias);
+    return s1;
 
 }
 
-void ILS:: swap(int i, int j){
+void ILS:: swap(Solucao *s, int i, int j){
 
     int aux = s->valorNaPos(i);
 
@@ -140,23 +107,21 @@ void ILS:: swap(int i, int j){
     s->sequencia[j] = aux;
 }
 
-double ILS:: calculateSwapCost(int i, int j){
+double ILS:: calculateSwapCost(Solucao *s, int i, int j){
     double  a_subtrair, a_somar, delta;
 
     if ((j == i + 1)){
         
-        a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(j, j+ 1);
-        a_somar = distanciaEntreVertices(i -1, j) + distanciaEntreVertices(i, j + 1 );
+        a_subtrair = distanciaEntreVertices(s, i - 1, i) + distanciaEntreVertices(s, j, j+ 1);
+        a_somar = distanciaEntreVertices(s, i -1, j) + distanciaEntreVertices(s, i, j + 1 );
         
     }
     else{
-         a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(i, i + 1) 
-                    + distanciaEntreVertices(j -1 , j) + distanciaEntreVertices(j, j+1);
+         a_subtrair = distanciaEntreVertices(s, i - 1, i) + distanciaEntreVertices(s, i, i + 1) 
+                    + distanciaEntreVertices(s, j -1 , j) + distanciaEntreVertices(s, j, j+1);
 
-
-
-        a_somar = distanciaEntreVertices(i - 1, j) + distanciaEntreVertices(j, i + 1)
-                + distanciaEntreVertices(j - 1, i) + distanciaEntreVertices(i, j + 1);
+        a_somar = distanciaEntreVertices(s, i - 1, j) + distanciaEntreVertices(s, j, i + 1)
+                + distanciaEntreVertices(s, j - 1, i) + distanciaEntreVertices(s, i, j + 1);
     }
 
     delta = a_somar - a_subtrair;
@@ -164,16 +129,16 @@ double ILS:: calculateSwapCost(int i, int j){
     return delta;
 }
 
-bool ILS:: bestImprovementSwap(){
+bool ILS:: bestImprovementSwap(Solucao *s){
     double bestDelta = 0.0, delta = 0.0;
     int best_i, best_j;  
     bool improved = false;
 
     for (int i = 1; i < s->sequencia.size() - 2; i++){
         for (int j = i + 1; j < s->sequencia.size() -1; j++){
-            delta = calculateSwapCost(i, j);
+            delta = calculateSwapCost(s, i, j);
 
-            if (delta < bestDelta){
+            if (improve(bestDelta, delta)){
                 bestDelta = delta;
                 best_i = i;
                 best_j = j;
@@ -182,40 +147,41 @@ bool ILS:: bestImprovementSwap(){
         }
     }
     if (improved){
-        swap(best_i, best_j);
+        swap(s, best_i, best_j);
         s->valorObj += bestDelta;
     }
 
     return improved;
 }
 
-void ILS:: twoOpt(int i, int j){
+void ILS:: twoOpt(Solucao *s, int i, int j){
     reverse(s->sequencia.begin() + i, s->sequencia.begin() + j + 1);
 }
 
 
-double ILS:: calculateTwoOptCost(int i, int j){
+double ILS:: calculateTwoOptCost(Solucao *s, int i, int j){
     double a_subtrair, a_somar, delta;
 
-    a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(j, j + 1);
-    a_somar = distanciaEntreVertices(i - 1, j) + distanciaEntreVertices(i, j + 1);
+    a_subtrair = distanciaEntreVertices(s, i - 1, i) + distanciaEntreVertices(s, j, j + 1);
+    a_somar = distanciaEntreVertices(s, i - 1, j) + distanciaEntreVertices(s, i, j + 1);
 
     delta = a_somar - a_subtrair;
 
     return delta;
 }
 
-bool ILS:: bestImprovementTwoOpt(){
-    double bestDelta = 0.0, delta = 0.0;
+bool ILS:: bestImprovementTwoOpt(Solucao *s){
+    double bestDelta = 0.0;
+    double delta = 0.0;
     int best_i, best_j;  
     bool improved = false;           
 
-    for (int i = 1; i < s->sequencia.size() - 1; i++){
+    for (int i = 1; i < s->sequencia.size() - 2; i++){
         for (int j = i + 1; j < s->sequencia.size() - 1; j++){
 
-            delta = calculateTwoOptCost(i, j);
+            delta = calculateTwoOptCost(s, i, j);
         
-            if (delta < bestDelta){
+            if (improve(bestDelta, delta)){
                 best_i = i;
                 best_j = j;
                 bestDelta = delta;
@@ -224,7 +190,7 @@ bool ILS:: bestImprovementTwoOpt(){
         }
     }
     if (improved){
-        twoOpt(best_i, best_j);
+        twoOpt(s, best_i, best_j);
         s->valorObj += bestDelta;
     }
 
@@ -232,7 +198,7 @@ bool ILS:: bestImprovementTwoOpt(){
 }
 
 
-void ILS:: orOpt(int i, int j, int size){
+void ILS:: orOpt(Solucao *s, int i, int j, int size){
     v_inteiros bloco(s->sequencia.begin() + i, s->sequencia.begin() + i + size);
 
     s->sequencia.erase(s->sequencia.begin() + i, s->sequencia.begin() + i + size);
@@ -241,22 +207,22 @@ void ILS:: orOpt(int i, int j, int size){
 }
 
 
-double ILS:: calculateOrOptCost(int i, int j, int size){
+double ILS:: calculateOrOptCost(Solucao *s, int i, int j, int size){
     double a_subtrair, a_somar, delta;
 
     if (i > j){
-        a_subtrair = distanciaEntreVertices(j - 1, j) + distanciaEntreVertices(i - 1, i)
-                   + distanciaEntreVertices(i + size - 1, i + size);
+        a_subtrair = distanciaEntreVertices(s, j - 1, j) + distanciaEntreVertices(s, i - 1, i)
+                   + distanciaEntreVertices(s, i + size - 1, i + size);
 
-        a_somar = distanciaEntreVertices(j - 1, i) + distanciaEntreVertices(i + size - 1, j)
-                + distanciaEntreVertices(i - 1, i + size);
+        a_somar = distanciaEntreVertices(s, j - 1, i) + distanciaEntreVertices(s, i + size - 1, j)
+                + distanciaEntreVertices(s, i - 1, i + size);
                 }
     else if (j > i){
-        a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(i + size - 1, i + size)
-                   + distanciaEntreVertices(j + size - 1, j + size);
+        a_subtrair = distanciaEntreVertices(s, i - 1, i) + distanciaEntreVertices(s, i + size - 1, i + size)
+                   + distanciaEntreVertices(s, j + size - 1, j + size);
 
-        a_somar = distanciaEntreVertices(i - 1, i + size) + distanciaEntreVertices(j + size - 1, i)
-                + distanciaEntreVertices(i + size - 1, j + size);
+        a_somar = distanciaEntreVertices(s, i - 1, i + size) + distanciaEntreVertices(s, j + size - 1, i)
+                + distanciaEntreVertices(s, i + size - 1, j + size);
                  }
 
     else{
@@ -270,16 +236,16 @@ double ILS:: calculateOrOptCost(int i, int j, int size){
 }
 
 
-bool ILS:: bestImprovementOrOpt(int size){
+bool ILS:: bestImprovementOrOpt(Solucao *s, int size){
     double bestDelta = 0.0, delta = 0.0;
     int best_i, best_j;  
     bool improved = false;    
 
     for (int i = 1; i < s->sequencia.size() - size; i++){
         for (int j = 1; j < s->sequencia.size() - size; j++){
-            delta = calculateOrOptCost(i, j, size);
+            delta = calculateOrOptCost(s, i, j, size);
 
-                if (delta < bestDelta){
+                if (improve(bestDelta, delta)){
                 best_i = i;
                 best_j = j;
                 bestDelta = delta;
@@ -289,14 +255,14 @@ bool ILS:: bestImprovementOrOpt(int size){
     }
 
     if (improved){
-        orOpt(best_i, best_j, size);
+        orOpt(s, best_i, best_j, size);
         s->valorObj += bestDelta;
     }
     return improved;      
 }
 
 
-void ILS:: BuscaLocal(){
+void ILS:: BuscaLocal(Solucao *s){
     v_inteiros NL = {1, 2, 3, 4, 5};
 
     bool improved = false;
@@ -310,19 +276,19 @@ void ILS:: BuscaLocal(){
         {
 
         case 1:
-            improved = bestImprovementSwap();
+            improved = bestImprovementSwap(s);
             break;
         case 2:
-            improved = bestImprovementTwoOpt();
+            improved = bestImprovementTwoOpt(s);
             break;
         case 3:
-            improved = bestImprovementOrOpt(1);
+            improved = bestImprovementOrOpt(s, 1);
             break;
         case 4:
-            improved = bestImprovementOrOpt(2);
+            improved = bestImprovementOrOpt(s, 2);
             break;
         case 5:
-            improved = bestImprovementOrOpt(3);
+            improved = bestImprovementOrOpt(s,3);
             break;
          }
 
@@ -337,9 +303,13 @@ void ILS:: BuscaLocal(){
 
 }
 
-void ILS:: perturbacao(){
+Solucao ILS:: perturbacao(Solucao *s){
+
+    Solucao seq;
+    seq.setSequence(s->sequencia);
+    seq.valorObj = s->valorObj;
   
-    int n_elem = std::ceil(s->sequencia.size() / 10.0);       
+    int n_elem = std::ceil(seq.sequencia.size() / 10.0);       
 
     int n1_elem, n2_elem; 
 
@@ -348,67 +318,67 @@ void ILS:: perturbacao(){
     while ((escolha_1 <= escolha_2 && escolha_2 <= fim_1) || (escolha_2 <= escolha_1 && escolha_1 <= fim_2) )
     {
         n1_elem = std::max(2, rand() % n_elem);
-        escolha_1 = rand() % (s->sequencia.size() - n1_elem - 1) + 1;
+        escolha_1 = rand() % (seq.sequencia.size() - n1_elem - 1) + 1;
         fim_1 = escolha_1 + n1_elem - 1;
 
         n2_elem = std::max(2, rand() % n_elem);
-        escolha_2 = rand() % (s->sequencia.size() - n2_elem - 1) + 1 ;
+        escolha_2 = rand() % (seq.sequencia.size() - n2_elem - 1) + 1 ;
         fim_2 = escolha_2 + n2_elem - 1  ;
     }
 
-    v_inteiros bloco1(s->sequencia.begin() + escolha_1, s->sequencia.begin() + escolha_1 + n1_elem);
-    v_inteiros bloco2(s->sequencia.begin() + escolha_2, s->sequencia.begin() + escolha_2 + n2_elem);
+    v_inteiros bloco1(seq.sequencia.begin() + escolha_1, seq.sequencia.begin() + escolha_1 + n1_elem);
+    v_inteiros bloco2(seq.sequencia.begin() + escolha_2, seq.sequencia.begin() + escolha_2 + n2_elem);
 
-    s->valorObj += calculatePerturbacaoCost(escolha_1, n1_elem, escolha_2, n2_elem);
+    seq.valorObj += calculatePerturbacaoCost(&seq, escolha_1, n1_elem, escolha_2, n2_elem);
 
     if (escolha_1 < escolha_2)
     {
-        s->sequencia.erase(s->sequencia.begin() + escolha_2, s->sequencia.begin() + escolha_2 + n2_elem);
-        s->sequencia.insert(s->sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
-        s->sequencia.erase(s->sequencia.begin() + escolha_1, s->sequencia.begin() + escolha_1 + n1_elem);
-        s->sequencia.insert(s->sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
+        seq.sequencia.erase(seq.sequencia.begin() + escolha_2, seq.sequencia.begin() + escolha_2 + n2_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
+        seq.sequencia.erase(seq.sequencia.begin() + escolha_1, seq.sequencia.begin() + escolha_1 + n1_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
     }
     else
     {
-        s->sequencia.erase(s->sequencia.begin() + escolha_1, s->sequencia.begin() + escolha_1 + n1_elem);
-        s->sequencia.insert(s->sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
-        s->sequencia.erase(s->sequencia.begin() + escolha_2, s->sequencia.begin() + escolha_2 + n2_elem);
-        s->sequencia.insert(s->sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
+        seq.sequencia.erase(seq.sequencia.begin() + escolha_1, seq.sequencia.begin() + escolha_1 + n1_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
+        seq.sequencia.erase(seq.sequencia.begin() + escolha_2, seq.sequencia.begin() + escolha_2 + n2_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
     }
 
-
+    return seq;
 
 }
 
 
 
-double ILS:: calculatePerturbacaoCost(int i, int size_i, int j, int size_j){
+double ILS:: calculatePerturbacaoCost(Solucao *s, int i, int size_i, int j, int size_j){
 
     double a_subtrair, a_somar, delta;
 
     if (i + size_i == j){
 
-        a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(i + size_i - 1, j)
-                   + distanciaEntreVertices(j + size_j - 1, j + size_j);
+        a_subtrair = distanciaEntreVertices(s, i - 1, i) + distanciaEntreVertices(s, i + size_i - 1, j)
+                   + distanciaEntreVertices(s, j + size_j - 1, j + size_j);
         
-        a_somar = distanciaEntreVertices(i - 1, j) + distanciaEntreVertices(j + size_j - 1, i) 
-                + distanciaEntreVertices(i + size_i - 1, j + size_j);
+        a_somar = distanciaEntreVertices(s, i - 1, j) + distanciaEntreVertices(s, j + size_j - 1, i) 
+                + distanciaEntreVertices(s, i + size_i - 1, j + size_j);
     }
     else if (j + size_j == i){
 
-        a_subtrair = distanciaEntreVertices(j - 1, j) + distanciaEntreVertices(j + size_j - 1, i)
-                   + distanciaEntreVertices(i + size_i - 1, i + size_i);
+        a_subtrair = distanciaEntreVertices(s, j - 1, j) + distanciaEntreVertices(s, j + size_j - 1, i)
+                   + distanciaEntreVertices(s, i + size_i - 1, i + size_i);
         
-        a_somar = distanciaEntreVertices(j - 1, i) + distanciaEntreVertices(i + size_i - 1, j)
-                + distanciaEntreVertices(j + size_j - 1, i + size_i);
+        a_somar = distanciaEntreVertices(s, j - 1, i) + distanciaEntreVertices(s, i + size_i - 1, j)
+                + distanciaEntreVertices(s, j + size_j - 1, i + size_i);
     }
 
     else{
-        a_subtrair = distanciaEntreVertices(i - 1, i) + distanciaEntreVertices(i + size_i - 1, i + size_i)
-                + distanciaEntreVertices(j - 1, j) + distanciaEntreVertices(j + size_j - 1, j + size_j);
+        a_subtrair = distanciaEntreVertices(s, i - 1, i) + distanciaEntreVertices(s, i + size_i - 1, i + size_i)
+                + distanciaEntreVertices(s, j - 1, j) + distanciaEntreVertices(s, j + size_j - 1, j + size_j);
         
-        a_somar = distanciaEntreVertices(i - 1, j) + distanciaEntreVertices(j + size_j - 1, i + size_i)
-                + distanciaEntreVertices(j - 1, i) + distanciaEntreVertices(i + size_i - 1, j + size_j);
+        a_somar = distanciaEntreVertices(s, i - 1, j) + distanciaEntreVertices(s, j + size_j - 1, i + size_i)
+                + distanciaEntreVertices(s, j - 1, i) + distanciaEntreVertices(s, i + size_i - 1, j + size_j);
     }
 
     delta = a_somar - a_subtrair;
@@ -418,46 +388,50 @@ double ILS:: calculatePerturbacaoCost(int i, int size_i, int j, int size_j){
 
 void ILS:: solve(){
     srand(time(NULL));
+    int q_nos = distancias->n_vertices + 1;
 
-    v_inteiros bestOfAll;
-    double best_costOfAll = INFINITY;
+    Solucao bestOfAll;
 
     for (int i = 0; i < maxIter; i++){
 
-        Construcao();
+        Solucao s = Construcao();
 
-        v_inteiros best = s->sequencia;
+        Solucao best = s;
 
-        double best_cost = s->valorObj;
+          if (i == 0){
+            bestOfAll.valorObj = s.valorObj;
+        }
+        
 
         int iterILS = 0;
 
         cout << "Iteração:    " << i + 1 << endl;
+
+        cout << "Construção com ValorObj:   " << s.valorObj << endl;
      
         while (iterILS <= maxIterILS)
         {
-            BuscaLocal();
+            BuscaLocal(&s);
 
-            if (s->valorObj < best_cost)
+            if (improve(best.valorObj, s.valorObj))
 
             {
-                best = s->sequencia;
-                best_cost = s->valorObj;
+                best = s;
+                cout << "Rolou na Construção  " << i << "  na Busca  " << iterILS << endl;
+                cout << "Melhor valor: " << best.valorObj << endl;
                 iterILS = 0;
             }
-
-            perturbacao();
-      
-
+            
+            s = perturbacao(&best);
+   
             iterILS++;
         }
-        if (best_cost < best_costOfAll){
-
+        if (improve(bestOfAll.valorObj, best.valorObj))
+        { 
             bestOfAll = best;
-            best_costOfAll = best_cost;
-        }
+            cout << "ATUALIZOU O ALL" << endl;
+         }
     }
-
-    s->sequencia = bestOfAll;
-    s->valorObj = best_costOfAll;
+   this->s_final->setSequence(bestOfAll.sequencia);
+   this->s_final->valorObj = bestOfAll.valorObj;
 }
