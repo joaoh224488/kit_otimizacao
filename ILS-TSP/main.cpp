@@ -32,13 +32,10 @@ int main(int argc, char *argv[]){
     }
     */
     
-  // Solucao->solve();
-   //Solucao->exibirSolucao();
+     Solucao->solve();
+    Solucao->exibirSolucao();
 
-   v_inteiros max = {1, 2, 14, 3, 4, 5, 6, 12, 7, 13, 11, 9, 10, 8, 1};
-   Solucao->s_final->sequencia = max;
-   Solucao->s_final->calcularValorObj(dist);
-   Solucao->s_final->exibirSequencia();
+
     
    // cout << Solucao->delta << endl;
 
