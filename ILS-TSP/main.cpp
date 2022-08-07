@@ -20,7 +20,6 @@ int main(int argc, char *argv[]){
     ILS *Solucao =  new ILS(dist);
 
     
- 
 
     /*
     for (int i = 1; i <=14; i ++){
@@ -32,15 +31,31 @@ int main(int argc, char *argv[]){
     }
     */
     
-     Solucao->solve();
-    Solucao->exibirSolucao();
-
-
     
+    Solucao->solve();
+    Solucao->exibirSolucao();
+    
+
+/*
+    Organizers::Solucao tst = Solucao->Construcao();
+    
+
+
+    tst.exibirSequencia();
+
+    tst = Solucao->perturbacao(&tst);
+
+    tst.exibirSequencia();
+
+    tst.calcularValorObj(dist);
+    cout << endl <<"Valor testado: " << tst.valorObj << endl;
+
+
+    */
    // cout << Solucao->delta << endl;
 
     cout << endl;
- 
+
     
     return 0;
 }

@@ -4,6 +4,9 @@
 
 #include <vector>
 #include <bits/stdc++.h>
+#include <limits>
+#include <cmath>
+
 
 typedef std::vector<int> v_inteiros;
 
@@ -27,11 +30,11 @@ namespace Organizers{
 
         void calcularValorObj(Data *distancias);
         void exibirSequencia();
-        void setSequence(v_inteiros seq);
+        void setSequence(v_inteiros seq) {this->sequencia.assign(seq.begin(), seq.end());};
 
-        int valorNaPos(int pos); // vetor
+        int valorNaPos(int pos) {return this->sequencia[pos];}; // vetor
 
-        double get_ValorObj();
+        double get_ValorObj() {return this->valorObj;};
 
 
     };
@@ -44,15 +47,21 @@ namespace Organizers{
         InsertionInfo();
         InsertionInfo(int no, int aresta, double custo);
         static std::vector<InsertionInfo> calcularCustoInsercao(Solucao *s, double **adjMatriz, v_inteiros CL);
-        static bool ordernarPorCusto(InsertionInfo &, InsertionInfo &);
+        static bool ordernarPorCusto(InsertionInfo &, InsertionInfo &) ;
     };
 
 
-    double epsilon(double a, double b);
+    inline double epsilon(double a, double b){
+        return fabs(a + b) * std::numeric_limits<double>::epsilon() * 15;
+    }
 
-    bool improve(double value_1, double value_2);
+    inline bool improve(double value_1, double value_2){
+        return (value_1 - value_2) > Organizers::epsilon(value_1, value_2);
+    }
 
-    void inserirNaSolucao(Solucao *s, std::vector <InsertionInfo> infoCusto, int selecionado);
+    inline void inserirNaSolucao(Solucao *s, std::vector <InsertionInfo> infoCusto, int selecionado){
+        s->sequencia.insert(s->sequencia.begin() + infoCusto[selecionado].arestaRemovida + 1, infoCusto[selecionado].noInserido);
+    }
 
     
 }

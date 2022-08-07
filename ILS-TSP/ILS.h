@@ -22,7 +22,7 @@ namespace ILS_Class{
 
 
         double get_current_cost();
-        double distanciaEntreVertices(Solucao *s, int a, int b);
+        double distanciaEntreVertices(Solucao *s, int a, int b) {return distancias->adjMatriz[s->valorNaPos(a)][s->valorNaPos(b)];};
         v_inteiros get_current_vector();
 
         void exibirSolucao();

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <chrono>
 
 using namespace Organizers;
 using namespace ILS_Class;
@@ -27,9 +28,6 @@ ILS :: ILS(Data *distancias){
 
 double ILS :: get_current_cost(){
     return this->s_final->valorObj;
-}
-double ILS:: distanciaEntreVertices(Solucao *s, int a, int b){
-    return distancias->adjMatriz[s->valorNaPos(a)][s->valorNaPos(b)];
 }
 
 v_inteiros ILS :: get_current_vector(){
@@ -305,6 +303,8 @@ void ILS:: BuscaLocal(Solucao *s){
 
 Solucao ILS:: perturbacao(Solucao *s){
 
+   // srand(time(NULL));
+
     Solucao seq;
     seq.setSequence(s->sequencia);
     seq.valorObj = s->valorObj;
@@ -387,8 +387,8 @@ double ILS:: calculatePerturbacaoCost(Solucao *s, int i, int size_i, int j, int 
 }
 
 void ILS:: solve(){
+    auto start = std::chrono::high_resolution_clock::now();
     srand(time(NULL));
-    int q_nos = distancias->n_vertices + 1;
 
     Solucao bestOfAll;
 
@@ -405,20 +405,22 @@ void ILS:: solve(){
 
         int iterILS = 0;
 
-        cout << "Iteração:    " << i + 1 << endl;
+       // cout << "Iteração:    " << i + 1 << endl;
 
-        cout << "Construção com ValorObj:   " << s.valorObj << endl;
+       //cout << "Construção com ValorObj:   " << s.valorObj << endl;
      
         while (iterILS <= maxIterILS)
         {
+            //cout << "IterILS : " << iterILS << endl;
             BuscaLocal(&s);
+           
 
             if (improve(best.valorObj, s.valorObj))
 
             {
                 best = s;
-                cout << "Rolou na Construção  " << i << "  na Busca  " << iterILS << endl;
-                cout << "Melhor valor: " << best.valorObj << endl;
+               //cout << "Rolou na Construção  " << i << "  na Busca  " << iterILS << endl;
+               // cout << "Melhor valor: " << best.valorObj << endl;
                 iterILS = 0;
             }
             
@@ -429,9 +431,13 @@ void ILS:: solve(){
         if (improve(bestOfAll.valorObj, best.valorObj))
         { 
             bestOfAll = best;
-            cout << "ATUALIZOU O ALL" << endl;
+            //cout << "ATUALIZOU O ALL" << endl;
          }
     }
    this->s_final->setSequence(bestOfAll.sequencia);
    this->s_final->valorObj = bestOfAll.valorObj;
+   auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> float_ms = end - start;
+    std::cout << "Tempo de execução:  " << float_ms.count() / 1000.0000000000000 << " segundos" << std::endl;
 }

@@ -1,6 +1,4 @@
 #include <iostream>
-#include <limits>
-#include <cmath>
 #include "Organizers_ILS.h"
 
 using namespace Organizers;
@@ -31,9 +29,6 @@ void Solucao:: calcularValorObj(Data *distancias)
 
 
 void Solucao:: exibirSequencia(){
-
-    cout.precision(numeric_limits<double> :: max_digits10);
-
     cout << "Sequence:    ";
     
     for (int i = 0 ; i < this->sequencia.size() - 1 ; i++){ 
@@ -43,18 +38,8 @@ void Solucao:: exibirSequencia(){
     cout << this-> sequencia.back() << endl;
 
     printf("Cost:   %.2lf \n", this->valorObj);
-     
-
 }
 
-
-int Solucao:: valorNaPos(int pos){
-    return this->sequencia[pos];
-}
-
-void Solucao:: setSequence(v_inteiros seq){
-    this->sequencia.assign(seq.begin(), seq.end());
-}
 
 
 InsertionInfo:: InsertionInfo(){
@@ -83,7 +68,6 @@ std::vector<InsertionInfo> InsertionInfo::calcularCustoInsercao(Solucao *s, doub
             insInfo.noInserido = k;
             insInfo.arestaRemovida = a;
             insInfo.custo = (adjMatriz[i][k] + adjMatriz[j][k] - adjMatriz[i][j]);
-
             custoInsercao.push_back(insInfo);
         }
         l++;
@@ -99,15 +83,3 @@ bool InsertionInfo::ordernarPorCusto(InsertionInfo &i, InsertionInfo &j){
     return false;
 }
 
-void Organizers::inserirNaSolucao(Solucao *s, std::vector <InsertionInfo> infoCusto, int selecionado){
-    s->sequencia.insert(s->sequencia.begin() + infoCusto[selecionado].arestaRemovida + 1, infoCusto[selecionado].noInserido);
-}
-
-
-double Organizers::epsilon(double a, double b) {
-    return fabs(a + b) * numeric_limits<double>::epsilon() * 15;
-};
-
-bool Organizers::improve(double value_1, double value_2) {
-    return (value_1 - value_2) > Organizers::epsilon(value_1, value_2);
-};
