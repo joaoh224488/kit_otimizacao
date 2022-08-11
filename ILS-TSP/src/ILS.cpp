@@ -234,10 +234,10 @@ bool ILS:: bestImprovementOrOpt(Solucao *s, int size){
             delta = calculateOrOptCost(s, i, j, size);
 
                 if (improve(bestDelta, delta)){
-                best_i = i;
-                best_j = j;
-                bestDelta = delta;
-                improved = true;
+                    best_i = i;
+                    best_j = j;
+                    bestDelta = delta;
+                    improved = true;
                 }
         }
     }
@@ -324,14 +324,14 @@ Solucao ILS:: perturbacao(Solucao *s){
     else{
         if (rand() % 2 == 0){    
 
-            n2_elem = std::max(2, std::min(rand() % (seq.get_size() - direita_1), n_lim));
+            n2_elem = std::max(2, rand() % std::min(seq.get_size() - direita_1, n_lim));
             inicio_2 = rand() % (seq.get_size() - direita_1 - n2_elem) + direita_1;
 
             
         }
         else{ 
 
-            n2_elem =  std::max(2, std::min(rand() % inicio_1, n_lim)); 
+            n2_elem =  std::max(2, rand() % std::min(inicio_1, n_lim)); 
             inicio_2 = rand() % (inicio_1 - n2_elem) + 1;
         
             
@@ -446,8 +446,10 @@ void ILS:: solve(){
        
          }
     }
+
    this->s_final->setSequence(bestOfAll.sequencia);
    this->s_final->valorObj = bestOfAll.valorObj;
+
    auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> float_ms = end - start;
