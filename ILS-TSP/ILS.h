@@ -28,11 +28,11 @@ namespace ILS_Class{
         void exibirSolucao();
         Solucao Construcao();
 
-        void swap(Solucao *s, int i, int j);
+        void swap(Solucao *s, int i, int j) {std::swap(s->sequencia[i], s->sequencia[j]) ;};
         double calculateSwapCost(Solucao *s, int i, int j);
         bool bestImprovementSwap(Solucao *s);
 
-        void twoOpt(Solucao *s, int i, int j);
+        void twoOpt(Solucao *s, int i, int j) {reverse(s->sequencia.begin() + i, s->sequencia.begin() + j + 1);};
         double calculateTwoOptCost(Solucao *s, int i, int j);
         bool bestImprovementTwoOpt(Solucao *s);
 

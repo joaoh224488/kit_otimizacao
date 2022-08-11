@@ -33,9 +33,8 @@ namespace Organizers{
         void setSequence(v_inteiros seq) {this->sequencia.assign(seq.begin(), seq.end());};
 
         int valorNaPos(int pos) {return this->sequencia[pos];}; // vetor
-
         double get_ValorObj() {return this->valorObj;};
-
+        int get_size() {return this->sequencia.size();};
 
     };
 

@@ -2,7 +2,6 @@
 #include "Organizers_ILS.h"
 
 using namespace Organizers;
-using namespace std;
 
 Data :: Data(int n_vertices, double ** adjMatriz){
 
@@ -29,13 +28,13 @@ void Solucao:: calcularValorObj(Data *distancias)
 
 
 void Solucao:: exibirSequencia(){
-    cout << "Sequence:    ";
+    std::cout << "Sequence:    ";
     
     for (int i = 0 ; i < this->sequencia.size() - 1 ; i++){ 
-        cout << this->sequencia[i] << " -> ";
+        std::cout << this->sequencia[i] << " -> ";
     }
 
-    cout << this-> sequencia.back() << endl;
+    std::cout << this-> sequencia.back() << std::endl;
 
     printf("Cost:   %.2lf \n", this->valorObj);
 }
@@ -57,7 +56,7 @@ InsertionInfo:: InsertionInfo(int no, int aresta, double custo){
 
 std::vector<InsertionInfo> InsertionInfo::calcularCustoInsercao(Solucao *s, double **adjMatriz, v_inteiros CL){
     InsertionInfo insInfo;
-    vector<InsertionInfo> custoInsercao;
+    std::vector<InsertionInfo> custoInsercao;
 
     int l = 0;
     for(int a = 0, b = 1; l < s->sequencia.size() - 1; a++, b++){

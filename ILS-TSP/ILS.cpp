@@ -7,7 +7,7 @@
 
 using namespace Organizers;
 using namespace ILS_Class;
-using namespace std;
+//using namespace std;
 
 ILS :: ILS (Data *distancias, int maxIter, int maxIterILS){
     this->distancias = distancias;
@@ -35,7 +35,6 @@ v_inteiros ILS :: get_current_vector(){
 }
 
 void ILS:: exibirSolucao(){
-    //this->s->calcularValorObj(distancias);
     s_final->exibirSequencia();
 }
 
@@ -75,7 +74,7 @@ Solucao ILS:: Construcao(){
 
     while (!CL.empty()){
     
-        vector<InsertionInfo> infoCusto;
+        std::vector<InsertionInfo> infoCusto;
     
         infoCusto = InsertionInfo::calcularCustoInsercao(&s1, distancias->adjMatriz, CL);
         sort(infoCusto.begin(), infoCusto.end(), InsertionInfo::ordernarPorCusto);
@@ -96,14 +95,7 @@ Solucao ILS:: Construcao(){
 
 }
 
-void ILS:: swap(Solucao *s, int i, int j){
-
-    int aux = s->valorNaPos(i);
-
-    s->sequencia[i] = s->sequencia[j];
-
-    s->sequencia[j] = aux;
-}
+//Swap definido como inlne function
 
 double ILS:: calculateSwapCost(Solucao *s, int i, int j){
     double  a_subtrair, a_somar, delta;
@@ -152,10 +144,8 @@ bool ILS:: bestImprovementSwap(Solucao *s){
     return improved;
 }
 
-void ILS:: twoOpt(Solucao *s, int i, int j){
-    reverse(s->sequencia.begin() + i, s->sequencia.begin() + j + 1);
-}
 
+// TwoOpt definido como inline function
 
 double ILS:: calculateTwoOptCost(Solucao *s, int i, int j){
     double a_subtrair, a_somar, delta;
@@ -303,47 +293,69 @@ void ILS:: BuscaLocal(Solucao *s){
 
 Solucao ILS:: perturbacao(Solucao *s){
 
-   // srand(time(NULL));
-
     Solucao seq;
     seq.setSequence(s->sequencia);
     seq.valorObj = s->valorObj;
   
-    int n_elem = std::ceil(seq.sequencia.size() / 10.0);       
+    int n_lim = std::ceil(seq.get_size() / 10.0);       
 
-    int n1_elem, n2_elem; 
+    int n1_elem = 0, n2_elem = 0, ident = 0; 
 
-    int escolha_1 = 0, escolha_2 = 0, fim_1 = 0, fim_2 = 0;
+    int inicio_1 = 0, inicio_2 = 0, direita_1 = 0;
 
-    while ((escolha_1 <= escolha_2 && escolha_2 <= fim_1) || (escolha_2 <= escolha_1 && escolha_1 <= fim_2) )
-    {
-        n1_elem = std::max(2, rand() % n_elem);
-        escolha_1 = rand() % (seq.sequencia.size() - n1_elem - 1) + 1;
-        fim_1 = escolha_1 + n1_elem - 1;
 
-        n2_elem = std::max(2, rand() % n_elem);
-        escolha_2 = rand() % (seq.sequencia.size() - n2_elem - 1) + 1 ;
-        fim_2 = escolha_2 + n2_elem - 1  ;
+    n1_elem = std::max(2, rand() % n_lim);
+    inicio_1 = rand() % (seq.get_size() - n1_elem - 1) + 1;
+    direita_1 = inicio_1 + n1_elem;
+
+    if ((inicio_1 == 1) || (inicio_1 == 2)){
+        n2_elem = std::max(2, rand() % (n_lim));
+        inicio_2 = rand() % (seq.get_size()- n2_elem - n1_elem  - inicio_1 - 1) + direita_1;  
+        
+
+    }
+    else if (direita_1 >= seq.get_size() - 2){
+        n2_elem = std::max(2, rand() % (n_lim));
+        inicio_2 = rand() % (seq.get_size() -  n2_elem - n1_elem 
+                   - (seq.get_size() - direita_1)) + 1;   
+                  
+      
+    }
+    else{
+        if (rand() % 2 == 0){    
+
+            n2_elem = std::max(2, std::min(rand() % (seq.get_size() - direita_1), n_lim));
+            inicio_2 = rand() % (seq.get_size() - direita_1 - n2_elem) + direita_1;
+
+            
+        }
+        else{ 
+
+            n2_elem =  std::max(2, std::min(rand() % inicio_1, n_lim)); 
+            inicio_2 = rand() % (inicio_1 - n2_elem) + 1;
+        
+            
+        }
     }
 
-    v_inteiros bloco1(seq.sequencia.begin() + escolha_1, seq.sequencia.begin() + escolha_1 + n1_elem);
-    v_inteiros bloco2(seq.sequencia.begin() + escolha_2, seq.sequencia.begin() + escolha_2 + n2_elem);
+    v_inteiros bloco1(seq.sequencia.begin() + inicio_1, seq.sequencia.begin() + inicio_1 + n1_elem);
+    v_inteiros bloco2(seq.sequencia.begin() + inicio_2, seq.sequencia.begin() + inicio_2 + n2_elem);
 
-    seq.valorObj += calculatePerturbacaoCost(&seq, escolha_1, n1_elem, escolha_2, n2_elem);
+    seq.valorObj += calculatePerturbacaoCost(&seq, inicio_1, n1_elem, inicio_2, n2_elem);
 
-    if (escolha_1 < escolha_2)
+    if (inicio_1 < inicio_2)
     {
-        seq.sequencia.erase(seq.sequencia.begin() + escolha_2, seq.sequencia.begin() + escolha_2 + n2_elem);
-        seq.sequencia.insert(seq.sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
-        seq.sequencia.erase(seq.sequencia.begin() + escolha_1, seq.sequencia.begin() + escolha_1 + n1_elem);
-        seq.sequencia.insert(seq.sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
+        seq.sequencia.erase(seq.sequencia.begin() + inicio_2, seq.sequencia.begin() + inicio_2 + n2_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + inicio_2, bloco1.begin(), bloco1.end());
+        seq.sequencia.erase(seq.sequencia.begin() + inicio_1, seq.sequencia.begin() + inicio_1 + n1_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + inicio_1, bloco2.begin(), bloco2.end());
     }
     else
     {
-        seq.sequencia.erase(seq.sequencia.begin() + escolha_1, seq.sequencia.begin() + escolha_1 + n1_elem);
-        seq.sequencia.insert(seq.sequencia.begin() + escolha_1, bloco2.begin(), bloco2.end());
-        seq.sequencia.erase(seq.sequencia.begin() + escolha_2, seq.sequencia.begin() + escolha_2 + n2_elem);
-        seq.sequencia.insert(seq.sequencia.begin() + escolha_2, bloco1.begin(), bloco1.end());
+        seq.sequencia.erase(seq.sequencia.begin() + inicio_1, seq.sequencia.begin() + inicio_1 + n1_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + inicio_1, bloco2.begin(), bloco2.end());
+        seq.sequencia.erase(seq.sequencia.begin() + inicio_2, seq.sequencia.begin() + inicio_2 + n2_elem);
+        seq.sequencia.insert(seq.sequencia.begin() + inicio_2, bloco1.begin(), bloco1.end());
     }
 
     return seq;
@@ -401,17 +413,13 @@ void ILS:: solve(){
           if (i == 0){
             bestOfAll.valorObj = s.valorObj;
         }
-        
 
         int iterILS = 0;
 
-       // cout << "Iteração:    " << i + 1 << endl;
-
-       //cout << "Construção com ValorObj:   " << s.valorObj << endl;
      
         while (iterILS <= maxIterILS)
         {
-            //cout << "IterILS : " << iterILS << endl;
+        
             BuscaLocal(&s);
            
 
@@ -419,19 +427,23 @@ void ILS:: solve(){
 
             {
                 best = s;
-               //cout << "Rolou na Construção  " << i << "  na Busca  " << iterILS << endl;
-               // cout << "Melhor valor: " << best.valorObj << endl;
+           
                 iterILS = 0;
             }
             
             s = perturbacao(&best);
+
+            if (s.valorObj < 0){
+                s.exibirSequencia();
+                break;
+            }
    
             iterILS++;
         }
         if (improve(bestOfAll.valorObj, best.valorObj))
         { 
             bestOfAll = best;
-            //cout << "ATUALIZOU O ALL" << endl;
+       
          }
     }
    this->s_final->setSequence(bestOfAll.sequencia);
