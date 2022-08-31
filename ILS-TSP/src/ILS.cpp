@@ -49,7 +49,7 @@ Solucao ILS:: Construcao(){
     v_inteiros V;                         
     v_inteiros CL;     
 
-    for (int i = 1; i <= n_vertices; i++){
+    for (int i = 2; i <= n_vertices; i++){
 
         V.push_back(i);                             
     }
@@ -60,8 +60,9 @@ Solucao ILS:: Construcao(){
 
     int chs;                         
 
+    s1.sequencia.push_back(1);
 
-    for (int i = 0; i < q_tour_inicial; i++){
+    for (int i = 0; i < q_tour_inicial - 1; i++){
         chs = CL[i];
 
         s1.sequencia.push_back(chs);
@@ -69,7 +70,7 @@ Solucao ILS:: Construcao(){
         CL.erase(remove(CL.begin(), CL.end(), chs), CL.end());
     }   
 
-    s1.sequencia.push_back(s1.sequencia[0]);
+    s1.sequencia.push_back(1);
 
 
     while (!CL.empty()){
