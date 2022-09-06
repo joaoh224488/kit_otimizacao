@@ -19,25 +19,10 @@ int main(int argc, char *argv[]){
     
     Data_MLP *dist = new Data_MLP(dimension, matrizAdj);
 
-    v_inteiros test;
-
-    for (int i = 1; i <= dimension; i++){
-        test.push_back(i);
-    }
-
-    test.push_back(1);
-
-
-    Solucao * seq = new Solucao();
-    seq->setSequence(test);
-
-    seq->calcularValorObj(dist);
-
-    seq->exibirSolucao();
-
-    cout << endl;
-
     ILS_MLP *x = new ILS_MLP(dist, 30, 40);
+
+    x->solve();
+    x->exibirSolucao();
 
 
     

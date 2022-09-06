@@ -4,7 +4,6 @@
 #include "Organizers_MLP.h"
 
 using namespace Organizers_MLP;
-typedef std::vector<std::vector<Subsequence>> subseq_matrix;
 
 namespace ILS_MLP_{
 
@@ -21,7 +20,13 @@ namespace ILS_MLP_{
             ILS_MLP(Organizers_MLP::Data_MLP *distancias);
             ILS_MLP(Organizers_MLP::Data_MLP *distancias, int maxIter, int maxIterILS);
 
-            void exibirSolucao(){s_final->exibirSolucao();};
+            void exibirSolucao(){s_final->exibir();};
+
+            Solucao Construcao();
+
+
+
+            void solve();
 
         };
     
