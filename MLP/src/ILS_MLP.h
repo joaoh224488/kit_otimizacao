@@ -24,7 +24,13 @@ namespace ILS_MLP_{
 
             Solucao Construcao();
 
+            void BuscaLocal(Solucao *s, subseq_matrix &m);
 
+            void swap(Solucao *s, int i, int j) {std::swap(s->sequencia[i], s->sequencia[j]) ;};
+            bool bestImprovementSwap(Solucao *s, subseq_matrix &m);
+            void updateAfterSwap(Solucao * s, subseq_matrix &s_matrix, int i, int j);
+
+            void twoOpt(Solucao *s, int i, int j) {reverse(s->sequencia.begin() + i, s->sequencia.begin() + j + 1);};
 
             void solve();
 

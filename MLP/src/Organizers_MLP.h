@@ -41,29 +41,38 @@ namespace Organizers_MLP{
 
     struct Subsequence{
         
-        double T, C;
-        int W, first, last;
+        double T = 0, C = 0;
+        int W = 0, first = 0, last = 0;  
 
-        inline static Subsequence Concatenate(Subsequence &sigma_1, Subsequence &sigma_2, Data_MLP *m){
-
-                Subsequence sigma;
-
-                double temp = m->adjMatriz[sigma_1.last][sigma_2.first];
-
-                sigma.W = sigma_1.W + sigma_2.W;
-                sigma.T = sigma_1.T + temp + sigma_2.T;
-                sigma.C = sigma_1.C + sigma_2.W * (sigma_1.T + temp) + sigma_2.C;
-
-                sigma.first = sigma_1.first;
-                sigma.last = sigma_2.last;
-
-
-                return sigma;
-            }
-            
+        inline void exibir_subseq(){
+            std:: cout << "T:   " << this->T << std:: endl;
+            std:: cout << "C:   " << this->C << std:: endl;
+            std:: cout << "W:   " << this->W << std:: endl;
+            std:: cout << "first:   " << this->first << std:: endl;
+            std:: cout << "last:   " << this->last << std:: endl << std:: endl;
+        }         
     };
 
     typedef std::vector<std::vector<Subsequence>> subseq_matrix;
+
+
+
+    inline static Subsequence Concatenate(Subsequence &sigma_1, Subsequence &sigma_2, Data_MLP *m){
+
+        Subsequence sigma;
+
+        double temp = m->adjMatriz[sigma_1.last][sigma_2.first];
+
+        sigma.W = sigma_1.W + sigma_2.W;
+        sigma.T = sigma_1.T + temp + sigma_2.T;
+        sigma.C = sigma_1.C + sigma_2.W * (sigma_1.T + temp) + sigma_2.C;
+
+        sigma.first = sigma_1.first;
+        sigma.last = sigma_2.last;
+
+
+        return sigma;
+    }
 
 
     inline void UpdateAllSubseq(Solucao * s, subseq_matrix &s_matrix, Data_MLP *m){
@@ -71,26 +80,30 @@ namespace Organizers_MLP{
         int n = s->sequencia.size();
 
         for (int i = 0; i < n; i++){
-            int v = s->sequencia[i];
-
+       
             s_matrix[i][i].W = (i > 0);
             s_matrix[i][i].C = 0;
             s_matrix[i][i].T = 0;
             s_matrix[i][i].first = s->sequencia[i];
             s_matrix[i][i].last = s->sequencia[i];
+
+            //s_matrix[i][i].exibir_subseq();
         }
 
         for (int i = 0; i < n; i++){
             for (int j = i + 1; j < n; j++){
-                s_matrix[i][j] = Subsequence::Concatenate(s_matrix[i][j-1], s_matrix[j][j], m);
+                s_matrix[i][j] = Concatenate(s_matrix[i][j-1], s_matrix[j][j], m);
+                //s_matrix[i][j].exibir_subseq();
             }
         }
 
         for (int i = n - 1; i >= 0; i--){
             for (int j = i -1; j >= 0; j--){
-                s_matrix[i][j] = Subsequence::Concatenate(s_matrix[i][j+1], s_matrix[j][j], m);
+                s_matrix[i][j] = Concatenate(s_matrix[i][j+1], s_matrix[j][j], m);
             }
         }
+
+        s_matrix[0][n - 1].exibir_subseq(); 
 
     }
 

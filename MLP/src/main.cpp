@@ -18,6 +18,8 @@ int main(int argc, char *argv[]){
     readData(argc, argv, &dimension, &matrizAdj);
     
     Data_MLP *dist = new Data_MLP(dimension, matrizAdj);
+    
+    dist->printData();
 
     ILS_MLP *x = new ILS_MLP(dist, 30, 40);
 
