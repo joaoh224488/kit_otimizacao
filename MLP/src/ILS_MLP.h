@@ -21,18 +21,24 @@ namespace ILS_MLP_{
             ILS_MLP(Organizers_MLP::Data_MLP *distancias, int maxIter, int maxIterILS);
 
             void exibirSolucao(){s_final->exibir();};
+            double distanciaEntreVertices(Solucao *s, int a, int b) {return distancias->adjMatriz[s->sequencia[a]][s->sequencia[b]];};
 
             Solucao Construcao();
+            Solucao perturbacao(Solucao *s);
 
-            void BuscaLocal(Solucao *s, subseq_matrix &m);
+            void BuscaLocal(Solucao *s);
 
             void swap(Solucao *s, int i, int j) {std::swap(s->sequencia[i], s->sequencia[j]) ;};
-            bool bestImprovementSwap(Solucao *s, subseq_matrix &m);
-            void updateAfterSwap(Solucao * s, subseq_matrix &s_matrix, int i, int j);
+            bool bestImprovementSwap(Solucao *s);
+            double calculateSwapCost(Solucao *s, int i, int j);
+            void updateAfterSwap(Solucao * s, int i, int j);
+
+
 
             void twoOpt(Solucao *s, int i, int j) {reverse(s->sequencia.begin() + i, s->sequencia.begin() + j + 1);};
 
             void solve();
+            void test();
 
         };
     

@@ -87,13 +87,13 @@ namespace Organizers_MLP{
             s_matrix[i][i].first = s->sequencia[i];
             s_matrix[i][i].last = s->sequencia[i];
 
-            //s_matrix[i][i].exibir_subseq();
+            s_matrix[i][i].exibir_subseq();
         }
 
         for (int i = 0; i < n; i++){
             for (int j = i + 1; j < n; j++){
                 s_matrix[i][j] = Concatenate(s_matrix[i][j-1], s_matrix[j][j], m);
-                //s_matrix[i][j].exibir_subseq();
+                s_matrix[i][j].exibir_subseq();
             }
         }
 
@@ -102,9 +102,6 @@ namespace Organizers_MLP{
                 s_matrix[i][j] = Concatenate(s_matrix[i][j+1], s_matrix[j][j], m);
             }
         }
-
-        s_matrix[0][n - 1].exibir_subseq(); 
-
     }
 
     struct InsertionInfo{

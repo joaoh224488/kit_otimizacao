@@ -71,24 +71,148 @@ Solucao ILS_MLP::Construcao(){
         CL.erase(remove(CL.begin(), CL.end(), infoCusto[selecionado].noInserido), CL.end());    
     }
 
-    s1.calcularValorObj(distancias);
+   UpdateAllSubseq(&s1, sub_m, distancias);
+   s1.valorObj = sub_m[0][distancias->n_vertices].C;
 
-    return s1;
+   return s1;
 }
 
+Solucao ILS_MLP:: perturbacao(Solucao *s){
 
-/*bool ILS_MLP::bestImprovementSwap(Solucao *s, subseq_matrix &m){
+   Solucao seq;
+   seq.setSequence(s->sequencia);
+   seq.valorObj = s->valorObj;
+
+   int n_lim = std::ceil(seq.get_size() / 10.0);       
+
+   int n1_elem = 0, n2_elem = 0, ident = 0; 
+
+   int inicio_1 = 0, inicio_2 = 0, direita_1 = 0;
+
+
+   n1_elem = std::max(2, rand() % n_lim);
+   inicio_1 = rand() % (seq.get_size() - n1_elem - 1) + 1;
+   direita_1 = inicio_1 + n1_elem;
+
+   if ((inicio_1 == 1) || (inicio_1 == 2)){
+      n2_elem = std::max(2, rand() % (n_lim));
+      inicio_2 = rand() % (seq.get_size()- n2_elem - n1_elem  - inicio_1 - 1) + direita_1;  
+      
+
+   }
+   else if (direita_1 >= seq.get_size() - 2){
+      n2_elem = std::max(2, rand() % (n_lim));
+      inicio_2 = rand() % (seq.get_size() -  n2_elem - n1_elem 
+                  - (seq.get_size() - direita_1)) + 1;   
+               
+   
+   }
+   else{
+      if (rand() % 2 == 0){    
+
+         n2_elem = std::max(2, rand() % std::min(seq.get_size() - direita_1, n_lim));
+         inicio_2 = rand() % (seq.get_size() - direita_1 - n2_elem) + direita_1;
+
+         
+      }
+      else{ 
+
+         n2_elem =  std::max(2, rand() % std::min(inicio_1, n_lim)); 
+         inicio_2 = rand() % (inicio_1 - n2_elem) + 1;
+      
+         
+      }
+   }
+
+   v_inteiros bloco1(seq.sequencia.begin() + inicio_1, seq.sequencia.begin() + inicio_1 + n1_elem);
+   v_inteiros bloco2(seq.sequencia.begin() + inicio_2, seq.sequencia.begin() + inicio_2 + n2_elem);
+
+
+   if (inicio_1 < inicio_2)
+   {
+      seq.sequencia.erase(seq.sequencia.begin() + inicio_2, seq.sequencia.begin() + inicio_2 + n2_elem);
+      seq.sequencia.insert(seq.sequencia.begin() + inicio_2, bloco1.begin(), bloco1.end());
+      seq.sequencia.erase(seq.sequencia.begin() + inicio_1, seq.sequencia.begin() + inicio_1 + n1_elem);
+      seq.sequencia.insert(seq.sequencia.begin() + inicio_1, bloco2.begin(), bloco2.end());
+   }
+   else
+   {
+      seq.sequencia.erase(seq.sequencia.begin() + inicio_1, seq.sequencia.begin() + inicio_1 + n1_elem);
+      seq.sequencia.insert(seq.sequencia.begin() + inicio_1, bloco2.begin(), bloco2.end());
+      seq.sequencia.erase(seq.sequencia.begin() + inicio_2, seq.sequencia.begin() + inicio_2 + n2_elem);
+      seq.sequencia.insert(seq.sequencia.begin() + inicio_2, bloco1.begin(), bloco1.end());
+   }
+   UpdateAllSubseq(&seq, sub_m, distancias);
+   seq.valorObj = sub_m[0][distancias->n_vertices].C;
+
+   return seq;
 
 }
-*/
+bool ILS_MLP::bestImprovementSwap(Solucao *s){
 
-void ILS_MLP:: BuscaLocal(Solucao *s, subseq_matrix &m){
 
-   v_inteiros NL = {1, 2, 3, 4, 5};
+   double bestDelta = 0.0, delta = 0.0, v_atual = s->valorObj;
+   int best_i, best_j;  
+   bool improved = false;
+
+   for (int i = 1; i < s->sequencia.size() - 2; i++){
+      for (int j = i + 1; j < s->sequencia.size() -1; j++){
+         delta = calculateSwapCost(s , i, j) - v_atual;
+
+         if (improve(bestDelta, delta)){
+               bestDelta = delta;
+               best_i = i;
+               best_j = j;
+               improved = true;
+         }
+      }
+   }
+   if (improved){
+      swap(s, best_i, best_j);
+      s->valorObj += bestDelta;
+   }
+
+   return improved;
+
+}
+
+//(j - i - 1) é o time warp
+double ILS_MLP::calculateSwapCost(Solucao *s, int i, int j){
+   double acumulated_cost, route_cost;
+   int n = distancias->n_vertices;
+
+   
+
+   if (j == i + 1){
+      route_cost = sub_m[0][i-1].T + distanciaEntreVertices(s, i-1, j);
+      acumulated_cost = sub_m[0][i-1].C + route_cost;
+
+      route_cost += distanciaEntreVertices(s, j, i);
+      acumulated_cost += route_cost + ((n - j) * (route_cost + distanciaEntreVertices(s, i, j + 1))) + sub_m[j + 1][n].C;
+
+   }
+   else{
+
+      route_cost = sub_m[0][i-1].T + distanciaEntreVertices(s, i-1, j);
+      acumulated_cost = sub_m[0][i-1].C + route_cost;
+
+      route_cost += distanciaEntreVertices(s, j, i +1);
+      acumulated_cost += (j - i - 1) * route_cost + sub_m[i + 1][j - 1].C;
+
+      route_cost += sub_m[i + 1][j - 1].T + distanciaEntreVertices(s, j - 1, i);
+      acumulated_cost += route_cost + ((n - j) *(route_cost + distanciaEntreVertices(s, i, j + 1))) + sub_m[j + 1][n].C;
+   }
+   
+   return acumulated_cost;
+}
+
+void ILS_MLP:: BuscaLocal(Solucao *s){
+
+   v_inteiros NL = {1};
 
    bool improved = false;
 
-   /*
+   
    while (!NL.empty())
    {
       int n = rand() % NL.size();
@@ -99,6 +223,7 @@ void ILS_MLP:: BuscaLocal(Solucao *s, subseq_matrix &m){
       case 1:
          improved = bestImprovementSwap(s);
          break;
+         /*
       case 2:
          improved = bestImprovementTwoOpt(s);
          break;
@@ -110,31 +235,80 @@ void ILS_MLP:: BuscaLocal(Solucao *s, subseq_matrix &m){
          break;
       case 5:
          improved = bestImprovementOrOpt(s,3);
-         break;
+         break; */
       }
 
       if (improved)
-      
-         NL = {1, 2, 3, 4, 5};
-      
+      {
+         NL = {1};
+         UpdateAllSubseq(s, sub_m, distancias);
+      }
 
       else
          NL.erase(NL.begin() + n);
    }
-   */
+   
 
 }
 
-
 void ILS_MLP:: solve(){
-   Solucao *s = new Solucao();
+   auto start = std::chrono::high_resolution_clock::now();
+    srand(time(NULL));
 
-   *s = Construcao();
+    Solucao bestOfAll;
 
-   s->exibir();
+    for (int i = 0; i < maxIter; i++){
 
-   UpdateAllSubseq(s, sub_m, distancias);
+        Solucao s = Construcao();
 
-   this->s_final->setSequence(s->sequencia);
-   this->s_final->valorObj = s->valorObj;
+        Solucao best = s;
+
+         if (i == 0){
+            bestOfAll.valorObj = s.valorObj;
+        }
+
+        int iterILS = 0;
+     
+        while (iterILS <= maxIterILS)
+        {
+            BuscaLocal(&s);
+            if (improve(best.valorObj, s.valorObj))
+
+            {
+                best = s;
+         
+                iterILS = 0;
+            }
+            
+            s = perturbacao(&best);
+
+            if (s.valorObj < 0){
+                s.exibir();
+                break;
+            }
+   
+            iterILS++;
+        }
+        if (improve(bestOfAll.valorObj, best.valorObj))
+        { 
+            bestOfAll = best;     
+         }
+    }
+
+   this->s_final->setSequence(bestOfAll.sequencia);
+   this->s_final->valorObj = bestOfAll.valorObj;
+
+   auto end = std::chrono::high_resolution_clock::now();
+
+   std::chrono::duration<double, std::milli> float_ms = end - start;
+   std::cout << "Tempo de execução:  " << float_ms.count() / 1000.0000000000000 << " segundos" << std::endl;
+}
+
+void ILS_MLP::test(){
+
+   Solucao s = Construcao();
+   s.exibir();
+   BuscaLocal(&s);
+   s.exibir();
+
 }
