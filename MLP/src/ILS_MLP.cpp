@@ -26,7 +26,6 @@ ILS_MLP::ILS_MLP(Organizers_MLP::Data_MLP *distancias, int maxIter, int maxIterI
 
 Solucao ILS_MLP::Construcao(){
 
-   srand(time(NULL));
    Solucao s1;
  
    int n_vertices = this->distancias->n_vertices;
