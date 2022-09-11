@@ -21,11 +21,11 @@ int main(int argc, char *argv[]){
     
     //dist->printData();
 
-    ILS_MLP *x = new ILS_MLP(dist, 30, 40);
+    ILS_MLP *x = new ILS_MLP(dist, 15, 100);
 
-    //x->solve();
-    x->test();
-    //x->exibirSolucao();
+    //x->test();
+    x->solve();
+    x->exibirSolucao();
 
 
     

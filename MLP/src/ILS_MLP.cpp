@@ -7,18 +7,21 @@ using namespace std;
 
 ILS_MLP::ILS_MLP(Organizers_MLP::Data_MLP *distancias, int maxIter, int maxIterILS){
 
-    this->distancias = distancias;
-    this->maxIter = maxIter;
-    this->maxIterILS = maxIterILS;
-    this->s_final = new Solucao();
-    this->sub_m = subseq_matrix(distancias->n_vertices + 1, std::vector<Subsequence>(distancias->n_vertices + 1));
+   this->distancias = distancias;
+   this->maxIter = maxIter;
+   this->maxIterILS = maxIterILS;
+   this->s_final = new Solucao();
+   this->sub_m = subseq_matrix(distancias->n_vertices + 1, std::vector<Subsequence>(distancias->n_vertices + 1));
 
  }
 
  ILS_MLP::ILS_MLP (Organizers_MLP::Data_MLP *distancias){
-    maxIterILS = distancias->n_vertices >= 150 ? distancias->n_vertices / 2 : distancias->n_vertices;
-
-    ILS_MLP(distancias, 50, maxIterILS);
+   this->distancias = distancias;
+   this->maxIter = 10;
+   this->maxIterILS = min(100, distancias->n_vertices);
+   this->s_final = new Solucao();
+   this->sub_m = subseq_matrix(distancias->n_vertices + 1, std::vector<Subsequence>(distancias->n_vertices + 1));
+  
  }
 
 Solucao ILS_MLP::Construcao(){
@@ -63,8 +66,9 @@ Solucao ILS_MLP::Construcao(){
         infoCusto = InsertionInfo::calcularCustoInsercao(&s1, distancias->adjMatriz, CL);
         sort(infoCusto.begin(), infoCusto.end(), InsertionInfo::ordernarPorCusto);
 
-        double alpha = (double) rand() / RAND_MAX;
-        int selecionado = rand() % ((int) ceil(alpha * infoCusto.size()));
+        double alpha = (double) (rand() % 25) / 100;
+        
+        int selecionado = (alpha == 0) ? 0 : rand() % ((int) ceil(alpha * infoCusto.size())) ;
 
         inserirNaSolucao(&s1, infoCusto, selecionado);
 
@@ -148,16 +152,19 @@ Solucao ILS_MLP:: perturbacao(Solucao *s){
    return seq;
 
 }
+
+
+
 bool ILS_MLP::bestImprovementSwap(Solucao *s){
 
 
-   double bestDelta = 0.0, delta = 0.0, v_atual = s->valorObj;
+   double bestDelta = s->valorObj, delta = 0.0;
    int best_i, best_j;  
    bool improved = false;
 
    for (int i = 1; i < s->sequencia.size() - 2; i++){
       for (int j = i + 1; j < s->sequencia.size() -1; j++){
-         delta = calculateSwapCost(s , i, j) - v_atual;
+         delta = calculateSwapCost(s , i, j);
 
          if (improve(bestDelta, delta)){
                bestDelta = delta;
@@ -169,46 +176,154 @@ bool ILS_MLP::bestImprovementSwap(Solucao *s){
    }
    if (improved){
       swap(s, best_i, best_j);
-      s->valorObj += bestDelta;
+      s->valorObj = bestDelta;
    }
 
    return improved;
 
 }
 
-//(j - i - 1) é o time warp
-double ILS_MLP::calculateSwapCost(Solucao *s, int i, int j){
-   double acumulated_cost, route_cost;
-   int n = distancias->n_vertices;
 
-   
+double ILS_MLP::calculateSwapCost(Solucao *s, int i, int j){
+   int n = distancias->n_vertices;
+   Subsequence sigma_1, sigma_2, sigma_3, complete_sub;
 
    if (j == i + 1){
-      route_cost = sub_m[0][i-1].T + distanciaEntreVertices(s, i-1, j);
-      acumulated_cost = sub_m[0][i-1].C + route_cost;
 
-      route_cost += distanciaEntreVertices(s, j, i);
-      acumulated_cost += route_cost + ((n - j) * (route_cost + distanciaEntreVertices(s, i, j + 1))) + sub_m[j + 1][n].C;
+   sigma_1 = Concatenate(sub_m[0][i - 1], sub_m[j][j], distancias);
+
+   sigma_2 = Concatenate(sigma_1, sub_m[i][i], distancias);
+
+   complete_sub = Concatenate(sigma_2, sub_m[j + 1][n], distancias);
 
    }
    else{
 
-      route_cost = sub_m[0][i-1].T + distanciaEntreVertices(s, i-1, j);
-      acumulated_cost = sub_m[0][i-1].C + route_cost;
+      sigma_1 = Concatenate(sub_m[0][i - 1], sub_m[j][j], distancias);
 
-      route_cost += distanciaEntreVertices(s, j, i +1);
-      acumulated_cost += (j - i - 1) * route_cost + sub_m[i + 1][j - 1].C;
+      sigma_2 = Concatenate(sigma_1, sub_m[i + 1][j - 1], distancias);
 
-      route_cost += sub_m[i + 1][j - 1].T + distanciaEntreVertices(s, j - 1, i);
-      acumulated_cost += route_cost + ((n - j) *(route_cost + distanciaEntreVertices(s, i, j + 1))) + sub_m[j + 1][n].C;
+      sigma_3 = Concatenate(sigma_2, sub_m[i][i], distancias);
+
+      complete_sub = Concatenate(sigma_3, sub_m[j + 1][n], distancias);
    }
-   
-   return acumulated_cost;
+
+   return complete_sub.C;
+}
+
+bool ILS_MLP::bestImprovementTwoOpt(Solucao *s){
+    double bestDelta = s->valorObj;
+    double delta = 0.0;
+    int best_i, best_j;  
+    bool improved = false;           
+
+    for (int i = 1; i < s->sequencia.size() - 2; i++){
+        for (int j = i + 1; j < s->sequencia.size() - 1; j++){
+
+            delta = calculateTwoOptCost(s, i, j);
+        
+            if (improve(bestDelta, delta)){
+                best_i = i;
+                best_j = j;
+                bestDelta = delta;
+                improved = true;
+            }
+        }
+    }
+    if (improved){
+        twoOpt(s, best_i, best_j);
+        s->valorObj = bestDelta;
+    }
+
+    return improved;
+}
+
+
+double ILS_MLP:: calculateTwoOptCost(Solucao *s, int i, int j){
+
+   int n = distancias->n_vertices;
+
+   Subsequence sigma_1, complete_sub;
+
+   sigma_1 = Concatenate(sub_m[0][i-1], sub_m[j][i], distancias);
+
+   complete_sub = Concatenate(sigma_1, sub_m[j + 1][n], distancias);
+
+   return complete_sub.C;
+}
+
+void ILS_MLP::orOpt(Solucao * s, int i, int j, int size){
+   v_inteiros bloco(s->sequencia.begin() + i, s->sequencia.begin() + i + size);
+
+   s->sequencia.erase(s->sequencia.begin() + i, s->sequencia.begin() + i + size);
+   s->sequencia.insert(s->sequencia.begin() + j, bloco.begin(), bloco.end());
+}
+
+
+bool ILS_MLP::bestImprovementOrOpt(Solucao *s, int size){
+   double bestDelta = s->valorObj, delta = 0.0;
+    int best_i, best_j;  
+    bool improved = false;    
+
+    for (int i = 1; i < s->sequencia.size() - size; i++){
+        for (int j = 1; j < s->sequencia.size() - size; j++){
+            if (i == j)
+               continue;
+
+
+            delta = calculateOrOptCost(s, i, j, size) ;
+
+            if (improve(bestDelta, delta)){
+               best_i = i;
+               best_j = j;
+               bestDelta = delta;
+               improved = true;
+            }
+        }
+    }
+
+    if (improved){
+        orOpt(s, best_i, best_j, size);
+        s->valorObj = bestDelta;
+    }
+    return improved;      
+}
+
+double ILS_MLP::calculateOrOptCost(Solucao *s, int i, int j, int size){
+   int n = distancias->n_vertices;
+
+   Subsequence sigma_1, sigma_2, complete_sub;
+
+   if (j > i){
+
+      sigma_1 = Concatenate(sub_m[0][i-1], sub_m[i + size][j + size - 1], distancias);
+
+      sigma_2 = Concatenate(sigma_1, sub_m[i][i + size - 1], distancias);
+
+      complete_sub = Concatenate(sigma_2, sub_m[j + size][n], distancias);
+
+   }
+   else if (i > j){
+
+      sigma_1 = Concatenate(sub_m[0][j-1], sub_m[i][i + size - 1], distancias);
+
+      sigma_2 = Concatenate(sigma_1, sub_m[j][i - 1], distancias);
+
+      complete_sub = Concatenate(sigma_2, sub_m[i + size][n], distancias);
+   }
+   else{
+      return 0;
+   }
+
+   return complete_sub.C;
+
+
+
 }
 
 void ILS_MLP:: BuscaLocal(Solucao *s){
 
-   v_inteiros NL = {1};
+   v_inteiros NL = {1, 2, 3, 4, 5};
 
    bool improved = false;
 
@@ -223,10 +338,10 @@ void ILS_MLP:: BuscaLocal(Solucao *s){
       case 1:
          improved = bestImprovementSwap(s);
          break;
-         /*
       case 2:
          improved = bestImprovementTwoOpt(s);
          break;
+         
       case 3:
          improved = bestImprovementOrOpt(s, 1);
          break;
@@ -235,12 +350,12 @@ void ILS_MLP:: BuscaLocal(Solucao *s){
          break;
       case 5:
          improved = bestImprovementOrOpt(s,3);
-         break; */
+         break; 
       }
 
       if (improved)
       {
-         NL = {1};
+         NL = {1, 2, 3, 4, 5};
          UpdateAllSubseq(s, sub_m, distancias);
       }
 
@@ -308,7 +423,20 @@ void ILS_MLP::test(){
 
    Solucao s = Construcao();
    s.exibir();
-   BuscaLocal(&s);
+
+
+   /*
+   cout << endl;
+
+   cout << "Teste:   " << calculateOrOptCost(&s, 6, 7, 1) << endl;
+   orOpt(&s, 6, 7, 1);
+   s.calcularValorObj(distancias);
+   UpdateAllSubseq(&s, sub_m, distancias);
+
    s.exibir();
+
+   cout << "Correto:    " << sub_m[0][distancias->n_vertices].C << endl;
+   */
+   //s.exibir();
 
 }

@@ -87,13 +87,13 @@ namespace Organizers_MLP{
             s_matrix[i][i].first = s->sequencia[i];
             s_matrix[i][i].last = s->sequencia[i];
 
-            s_matrix[i][i].exibir_subseq();
+           // s_matrix[i][i].exibir_subseq();
         }
 
         for (int i = 0; i < n; i++){
             for (int j = i + 1; j < n; j++){
                 s_matrix[i][j] = Concatenate(s_matrix[i][j-1], s_matrix[j][j], m);
-                s_matrix[i][j].exibir_subseq();
+                //s_matrix[i][j].exibir_subseq();
             }
         }
 
@@ -119,6 +119,7 @@ namespace Organizers_MLP{
     inline double epsilon(double a, double b){
         return fabs(a + b) * std::numeric_limits<double>::epsilon() * 15;
     }
+
     inline bool improve(double value_1, double value_2){
         return (value_1 - value_2) > Organizers_MLP::epsilon(value_1, value_2);
     }

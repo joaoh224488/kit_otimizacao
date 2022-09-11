@@ -31,11 +31,17 @@ namespace ILS_MLP_{
             void swap(Solucao *s, int i, int j) {std::swap(s->sequencia[i], s->sequencia[j]) ;};
             bool bestImprovementSwap(Solucao *s);
             double calculateSwapCost(Solucao *s, int i, int j);
-            void updateAfterSwap(Solucao * s, int i, int j);
-
-
+            void updateAfterSwap(Solucao *s, int i, int j);  // NÃO RESOLVIDO
 
             void twoOpt(Solucao *s, int i, int j) {reverse(s->sequencia.begin() + i, s->sequencia.begin() + j + 1);};
+            bool bestImprovementTwoOpt(Solucao *s);
+            double calculateTwoOptCost(Solucao *s, int i, int j);
+            void updateAfterTwoOpt(Solucao *s, int i, int j);  // NÃO RESOLVIDO
+
+            void orOpt(Solucao *s, int i, int j, int size);
+            bool bestImprovementOrOpt(Solucao *s, int size);
+            double calculateOrOptCost(Solucao *s, int i, int j, int size);
+            void updateAfterOrOpt(Solucao *s, int i, int j, int size);  // NÃO RESOLVIDO
 
             void solve();
             void test();
